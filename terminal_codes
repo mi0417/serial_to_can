@@ -1,0 +1,3 @@
+pyside6-uic --o .\basic_main_window_ui.py .\basic_main_window.ui
+
+pyinstaller --noconfirm --onefile --windowed --icon "D:\project\serial\SerialToCAN\imgs\xjrhf-qqsx8-001.ico" --add-data "D:\project\serial\SerialToCAN\basic_main_window.qss;." --add-data "D:\project\serial\SerialToCAN\imgs\icon (2).png;.\imgs" --distpath "D:\project\serial\SerialToCAN\output"  "D:/project/serial/SerialToCAN/main.py"
