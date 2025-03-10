@@ -1,0 +1,14 @@
+QWidget#keyWidget {
+    /* background-color: white; */
+    border: 1px solid dimgray;
+    border-radius: 3px;
+}
+
+QWidget#keyWidget QLabel {
+    border: 1px solid white;
+    /* 设置内边距，让文字与边框有一定间距 */
+    padding: 5px;
+    /* 设置外边距为 0，让边框之间更紧凑 */
+    margin: 0;
+    border-radius: 3px;
+}
