@@ -18,7 +18,7 @@ def hex_str_to_little_endian_array(hex_str, byte_count=0):
         hex_str = hex_str[2:]
 
     # 验证输入是否为有效的十六进制字符串
-    if not all(c in '0123456789abcdefABCDEF' for c in hex_str):
+    if not all(c in '0123456789abcdefABCDEF ' for c in hex_str):
         return None
     
     # 将十六进制字符串转换为字节数组
@@ -42,6 +42,33 @@ def hex_str_to_little_endian_array(hex_str, byte_count=0):
             little_endian_array = little_endian_array[:byte_count]
 
     return little_endian_array
+
+def hex_str_to_byte_array(hex_str):
+    '''
+    将十六进制字符串转换为字节数组。
+
+    Args:
+        hex_str (str): 十六进制字符串，如 '12345678'
+
+    Returns:
+        bytes: 字节数组，如 b'\x12\x34\x56\x78'
+    '''
+    # 移除可能存在的 '0x' 前缀
+    if hex_str.startswith('0x'):
+        hex_str = hex_str[2:]
+
+    # 验证输入是否为有效的十六进制字符串
+    if not all(c in '0123456789abcdefABCDEF ' for c in hex_str):
+        return None
+    
+    # 将十六进制字符串转换为字节数组
+    try:
+        byte_array = bytes.fromhex(hex_str)
+    except ValueError as e:
+        logger.error('Invalid hex string: %s', e)
+        return None
+    
+    return byte_array
 
 def little_endian_array_to_hex_str(byte_array):
     '''

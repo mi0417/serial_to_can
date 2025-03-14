@@ -1,15 +1,57 @@
 '''
 view 类
 '''
-from PySide6.QtGui import QColor, QIcon
+import ctypes
+from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics
 from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem
+from PySide6.QtCore import Qt, QSize
 
-from basic_main_window_ui2 import Ui_MainWindow
+from basic_main_window_ui import Ui_MainWindow
 
+from serial_handle import SerialOperator
 from logger import logger
 from datetime import datetime
 
+class MyComboBoxControl(QComboBox):
 
+    def __init__(self, parent = None):
+        super(MyComboBoxControl,self).__init__(parent) #调用父类初始化方法
+
+    # 重写showPopup函数
+    def showPopup(self):  
+        # 获取原选项
+        index = self.currentIndex()
+        logger.debug('当前索引:%d', index)
+        font_metrics = QFontMetrics(self.font())
+        # 先清空原有的选项
+        self.clear()
+        # 初始化串口列表
+        available_ports = SerialOperator().list_available_ports(True)
+        logger.info('可用串口:%s', available_ports)
+        # 计算滚动条宽度
+        scrollbar_width = self.view().verticalScrollBar().sizeHint().width()
+        # 计算视图的内边距
+        view_margins = self.view().contentsMargins()
+        total_margin_width = view_margins.left() + view_margins.right()
+        max_width = 0
+        for port in available_ports:
+            self.addItem(port)
+
+            # width = font_metrics.horizontalAdvance (port) + 30
+            # 计算文本的宽度
+            text_width = font_metrics.horizontalAdvance(port)
+            # 计算包含滚动条和内边距的总宽度
+            width = text_width + scrollbar_width + total_margin_width + 10
+            if width > max_width:
+                max_width = width
+
+        if max_width > self.maximumWidth():
+            self.view().setFixedWidth(max_width)
+
+        if self.count() >= index:
+            self.setCurrentIndex(index)
+            logger.debug('重置串口数据，设置索引:%d', index)
+        QComboBox.showPopup(self)   # 弹出选项框  
 
 class View(QMainWindow):
     # view 颜色
@@ -38,12 +80,13 @@ class View(QMainWindow):
         self.controller = None
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("serial2can")
         if icon_path:
             self.setWindowIcon(QIcon(icon_path))
         if window_title:
             self.setWindowTitle(window_title)
+            
         self.init_UI()
-        self.ui.serialBox.currentIndexChanged.connect(lambda: self.show_selected_combobox(self.ui.serialBox))
 
 
     def init_UI(self):
@@ -52,7 +95,45 @@ class View(QMainWindow):
         '''
         # 设置列表部件允许换行
         self.ui.outputWidget.setWordWrap(True)
+        
+        # 重写QComboBox
+        self.ui.serialBox = self.replace_combo_box(self.ui.serialBox, self)
 
+
+        self.ui.serialBox.currentIndexChanged.connect(lambda: self.show_selected_combobox(self.ui.serialBox))
+
+
+    def replace_combo_box(self, original_combo:QComboBox, parent):
+        if original_combo:
+            logger.debug('替换原有的 QComboBox')
+            combo = MyComboBoxControl(parent)
+            # combo.setGeometry(original_combo.geometry())
+            # combo.addItems([original_combo.itemText(i) for i in range(original_combo.count())])
+            # combo.setMinimumSize(original_combo.minimumSize())
+            combo.setMaximumSize(original_combo.maximumSize())
+            # combo.setFont(original_combo.font())
+            # combo.setInputMethodHints(original_combo.inputMethodHints())
+            combo.setObjectName(original_combo.objectName())
+        else:
+            logger.debug('创建新的 QComboBox')
+            combo = MyComboBoxControl(parent)
+            # combo.setMinimumSize(QSize(180, 25))
+            combo.setMaximumSize(QSize(100, 16777215))
+            # font = QFont()
+            # font.setFamily('微软雅黑')
+            # font.setPointSize(20)
+            # combo.setFont(font)
+            # combo.setInputMethodHints(Qt.ImhEmailCharactersOnly | Qt.ImhNoAutoUppercase)
+            combo.setObjectName('serialBox')
+
+        # 替换原有的 QComboBox
+        if original_combo.parent().layout():
+            index = original_combo.parent().layout().indexOf(original_combo)
+            original_combo.parent().layout().removeWidget(original_combo)
+            # 释放原有的 QComboBox 资源
+            original_combo.deleteLater()
+            original_combo.parent().layout().insertWidget(index, combo)
+        return combo
 
     def show_selected_combobox(self, combobox:QComboBox):
         '''

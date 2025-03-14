@@ -38,11 +38,27 @@ class SerialOperator:
         '''
         return self._is_open
 
-    def list_available_ports(self):
-        ports = serial.tools.list_ports.comports()
-        return [port.device for port in ports]
+    
+    def list_available_ports(self, description=False):
+        '''
+        获取可用的串口列表及其详细信息。
 
-    def open_serial_port(self, port, baudrate=115200, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=1):
+        :param description: 可选参数，用于过滤串口描述信息。如果提供了该参数，
+                            则只返回描述信息中包含该参数的串口信息。'
+
+        :return: 一个包含串口信息的列表，每个元素是一个字典，包含以下键值对：
+                 - 'device': 串口号，例如 'COM3' 或 '/dev/ttyUSB0'
+                 - 'name': 串口名称
+                 - 'description': 串口描述信息
+        '''
+        ports = serial.tools.list_ports.comports()
+        if description:
+            return [f'{port.device} #{port.description}' for port in ports]
+        else:
+            return [port.device for port in ports]
+
+
+    def open_serial_port(self, port:str, baudrate=115200, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=1):
         '''
         打开指定的串口。如果该串口已经打开，则先关闭它再重新打开。
 
@@ -53,26 +69,28 @@ class SerialOperator:
         :param timeout: 串口操作的超时时间，单位为秒，默认为 1 秒
         :return: 若成功打开串口，返回 True；若打开失败，返回 False
         '''
-        if self._is_open and self._opened_port == port:
-            logger.debug('串口 %s 已经打开', port)
+        # 提取实际的串口设备名
+        port_name = port.split(' #')[0]
+        if self._is_open and self._opened_port == port_name:
+            logger.debug('串口 %s 已经打开', port_name)
             # 如果该实体已经打开了这个串口，无需重复操作
             return True
         try:
             if self._is_open:
                 # 如果该实体已经打开了其他串口，先关闭它
                 self.close_serial_port()
-            self._ser = serial.Serial(port, baudrate, bytesize=bytesize, stopbits=stopbits, timeout=timeout)
+            self._ser = serial.Serial(port_name, baudrate, bytesize=bytesize, stopbits=stopbits, timeout=timeout, write_timeout=timeout)
             # 检查串口是否成功打开
             if self._ser.is_open:
-                logger.info('成功打开串口: %s', port)
+                logger.info('成功打开串口: %s', port_name)
                 self._is_open = True
-                self._opened_port = port
+                self._opened_port = port_name
                 return True
             else:
-                logger.info('打开串口 %s 失败', port)
+                logger.info('打开串口 %s 失败', port_name)
                 return False
         except serial.SerialException as e:
-            logger.error('打开串口 %s 失败: %s', port, e)
+            logger.error('打开串口 %s 失败: %s', port_name, e)
             return False
         
 

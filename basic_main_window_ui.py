@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.widget = QWidget(self.centralwidget)
         self.widget.setObjectName(u"widget")
-        self.widget.setMaximumSize(QSize(16777215, 70))
+        self.widget.setMaximumSize(QSize(16777215, 90))
         self.horizontalLayout = QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.serialBox = QComboBox(self.widget)

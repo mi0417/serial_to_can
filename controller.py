@@ -92,7 +92,10 @@ class SerialCommunicationThread(QThread):
         else:
             toml_path = exe_absolute_path(toml_path)
         if is_file_exists(toml_path):
-            if self.reset_device():
+            result = self.reset_device()
+            if result:
+            # if self.reset_device():
+
                 result, message = self.model.cofig_device(toml_path)
                 self.set_config_result_signal.emit(result, message)
             else:
@@ -107,7 +110,8 @@ class SerialCommunicationThread(QThread):
         result, message = self.model.read_device_config()
         if not result and not message:
             self.read_config_result_signal.emit(result, '读取失败')
-        self.read_config_result_signal.emit(result, message)
+        else:
+            self.read_config_result_signal.emit(result, message)
     
     def get_key_status(self):
         '''
@@ -177,7 +181,8 @@ class Controller(QObject):
         self.view.ui.getKeyStatusButton.clicked.connect(self.get_key_status)
 
     def toggle_serial(self):
-        port_name = self.view.ui.serialBox.currentText()
+        port = self.view.ui.serialBox.currentText()
+        port_name = port.split(' #')[0]
         if not port_name:
             logger.error('未选择串口')
             return
@@ -210,14 +215,15 @@ class Controller(QObject):
             # 串口连接后，设置下拉框不可编辑
             self.view.ui.serialBox.setEnabled(False)
 
-    def handle_serial_open_result(self, result, port_name):
+    def handle_serial_open_result(self, result, port:str):
+        port_name = port.split(' #')[0]
         if result:
             self.view.ui.connectButton.setText(View.BTN_DISCONNECT)
             # 串口连接后，设置下拉框不可编辑
             self.view.ui.serialBox.setEnabled(False)
-            logger.info('成功打开串口 %s', port_name)
-            self.view.write_to_statusbar(f'成功打开串口 {port_name}')
-            self.view.log_message(f'成功打开串口 {port_name}', self.view.LOG_TYPE_INFO)
+            logger.info('成功打开串口 %s', self.model.serial.port)
+            self.view.write_to_statusbar(f'成功打开串口 {self.model.serial.port}')
+            self.view.log_message(f'成功打开串口 {self.model.serial.port}', self.view.LOG_TYPE_INFO)
         else:
             logger.error('无法打开串口 %s', port_name)
             self.view.ui.connectButton.setText(View.BTN_CONNECT)
@@ -225,12 +231,14 @@ class Controller(QObject):
             # 串口断开后，设置下拉框可编辑
             self.view.ui.serialBox.setEnabled(True)
 
-    def handle_serial_closed(self, close_status, port_name):
+    def handle_serial_closed(self, close_status, port:str):
         '''
         处理串口关闭信号
         :param close_status: 串口关闭状态，True表示主动关闭，False表示被动关闭
         :param port_name: 串口名称
         '''
+        
+        port_name = port.split(' #')[0]
         if not close_status and self.view.ui.connectButton.text() == View.BTN_DISCONNECT:
             self.view.ui.connectButton.setText(View.BTN_CONNECT)
             self.view.write_to_statusbar(f'串口 {port_name} 已断开')
@@ -303,6 +311,9 @@ class Controller(QObject):
         if self.serial_thread and self.serial_thread.isRunning():
             self.view.log_message(self.view.ui.setConfigButton.text(), self.view.LOG_TYPE_INFO)
             self.serial_thread.set_config_device(toml_path)
+        else:
+            self.view.log_message('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
 
     def handle_read_config_result(self, result, message):
         '''
@@ -338,6 +349,9 @@ class Controller(QObject):
             self.serial_thread.get_software_version()
             self.serial_thread.set_config_device()
             self.serial_thread.read_config_device()
+        else:
+            self.view.log_message('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
 
     def get_key_status(self):
         '''

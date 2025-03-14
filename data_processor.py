@@ -88,9 +88,12 @@ class SerialMessage:
     CRC_ERROR = 'CRC_ERROR'
     END_SYMBOL_ERROR = 'END_SYMBOL_ERROR'
     DATA_LENGTH_ERROR = 'DATA_LENGTH_ERROR'
-    DATA_LENGTH_EXCEED_ERROR = 'DATA_LENGTH_EXCEED_ERROR'   # 数据体长度超过最大长度
-    DATA_LENGTH_SHORT_ERROR = 'DATA_LENGTH_SHORT_ERROR'   # 数据体长度不足最小长度
-    DATA_LENGTH_MISMATCH_ERROR = 'DATA_LENGTH_MISMATCH_ERROR'   # 数据体长度与实际长度不匹配
+    DATA_LENGTH_EXCEED_ERROR = 'DATA_LENGTH_EXCEED_ERROR'
+    '''数据体长度超过最大长度'''
+    DATA_LENGTH_SHORT_ERROR = 'DATA_LENGTH_SHORT_ERROR'
+    '''数据体长度不足最小长度'''
+    DATA_LENGTH_MISMATCH_ERROR = 'DATA_LENGTH_MISMATCH_ERROR'
+    '''数据体长度与实际长度不匹配'''
     NO_ERROR = 'NO_ERROR'
 
     DATA_RESPONSE_NONE = 'DATA_RESPONSE_NONE'
@@ -128,6 +131,23 @@ class SerialMessage:
         data_body_length_bytes = serial_data[HEADER_LENGTH + DATA_TYPE_LENGTH + COMMAND_LENGTH:HEADER_LENGTH + DATA_TYPE_LENGTH + COMMAND_LENGTH + DATA_LENGTH_BYTES]
         data_body_length = int.from_bytes(data_body_length_bytes, byteorder='little', signed=False)
 
+        # 消息头格式判定
+        if header not in ValidValues.HEADERS:
+            logger.error('Invalid message header: %s', header)
+            return None, cls.HEADER_ERROR
+        # 数据类型判定
+        if data_type not in ValidValues.DATA_TYPES:
+            logger.error('Invalid message data type: %s', data_type)
+            return None, cls.DATA_TYPE_ERROR
+        # 命令判定
+        if command not in ValidValues.COMMANDS:
+            logger.error('Unknown message command: %s', command)
+            return None, cls.COMMAND_ERROR
+        # TODO OTA功能datalenth和指令判定
+        if data_body_length > MAX_APP_DATA_LENGTH:
+            logger.error('Data length exceeds maximum allowed length. Expected at most %d bytes, got %d bytes.', MAX_APP_DATA_LENGTH, data_body_length)
+            return None, cls.DATA_LENGTH_EXCEED_ERROR
+
         # 检查数据体部分长度是否足够
         expected_total_length = MIN_DATA_LENGTH + data_body_length
         if len(serial_data) < expected_total_length:
@@ -144,18 +164,6 @@ class SerialMessage:
             logger.warning('Received more than %d bytes for end_symbol. Truncating to %d bytes.', END_SYMBOL_LENGTH, END_SYMBOL_LENGTH)
             end_symbol = end_symbol[:END_SYMBOL_LENGTH]
 
-        # 消息头格式判定
-        if header not in ValidValues.HEADERS:
-            logger.error('Invalid message header: %s', header)
-            return None, cls.HEADER_ERROR
-        # 数据类型判定
-        if data_type not in ValidValues.DATA_TYPES:
-            logger.error('Invalid message data type: %s', data_type)
-            return None, cls.DATA_TYPE_ERROR
-        # 命令判定
-        if command not in ValidValues.COMMANDS:
-            logger.error('Unknown message command: %s', command)
-            return None, cls.COMMAND_ERROR
         # CRC校验
         expected_crc = utils.calculate_crc_bytes(data)
         if data_crc != expected_crc:

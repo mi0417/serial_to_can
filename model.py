@@ -22,7 +22,7 @@ class SerialModel:
         '''
         获取设备上的串口
         '''
-        return self.serial.list_available_ports()
+        return self.serial.list_available_ports(True)
 
     def open_serial_port(self, port_name, baudrate=115200, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=1):
         '''
@@ -48,34 +48,41 @@ class SerialModel:
         接收数据
         '''
         data = self.serial.receive_data()
+                    
         if data:
             self.last_receive_time = time.time()  # 更新时间戳
             self.data_buffer.extend(data)  # 将接收到的数据添加到缓冲区
             
-            # 尝试解析缓冲区中的数据，接收完整数据的超时时间设为1s
-            if len(self.data_buffer) >= MIN_DATA_LENGTH:
-                            
-
-                serial_message, message_status = SerialMessage.from_serial_data(self.data_buffer)
-                if serial_message:
-                    # 解析成功，移除已解析的数据
-                    parsed_length = serial_message.data_length
-                    self.data_buffer = self.data_buffer[parsed_length:]
-                    return serial_message
-                else:
-                    # 解析失败，判断是否为数据格式错误
-                    if message_status in [SerialMessage.HEADER_ERROR, SerialMessage.CRC_ERROR, SerialMessage.END_SYMBOL_ERROR]:  # 数据格式错误
-                        # 尝试找到下一个消息头
-                        for i in range(len(self.data_buffer)):
-                            if self.data_buffer[i:i + len(ValidValues.HEADER_LUX)] == ValidValues.HEADER_LUX:
-                                # 找到下一个消息头，移除之前的无效数据
-                                self.data_buffer = self.data_buffer[i:]
-                                break
-                        else:
-                            # 没有找到下一个消息头，清空缓冲区
-                            self.data_buffer = bytearray()
-                    else:  
-                        header_start_time = time.time()
+        # 尝试解析缓冲区中的数据，接收完整数据的超时时间设为1s
+        if len(self.data_buffer) >= MIN_DATA_LENGTH:
+            serial_message, message_status = SerialMessage.from_serial_data(self.data_buffer)
+            if serial_message:
+                # 解析成功，移除已解析的数据
+                parsed_length = serial_message.data_length
+                self.data_buffer = self.data_buffer[parsed_length:]
+                return serial_message
+            else:
+                # 解析失败，判断是否为数据格式错误
+                if message_status in [SerialMessage.HEADER_ERROR, SerialMessage.CRC_ERROR, SerialMessage.END_SYMBOL_ERROR]:  # 数据格式错误
+                    # 尝试找到下一个消息头
+                    for i in range(1, len(self.data_buffer), 1):
+                        if self.data_buffer[i:i + len(ValidValues.HEADER_LUX)] == ValidValues.HEADER_LUX:
+                            # 找到下一个消息头，移除之前的无效数据
+                            discarded_data = self.data_buffer[:i]
+                            if discarded_data:
+                                logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(discarded_data))
+                        
+                            self.data_buffer = self.data_buffer[i:]
+                            break
+                    else:
+                        # 没有找到下一个消息头，清空缓冲区
+                        logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(self.data_buffer))
+                        self.data_buffer = bytearray()
+                else:  
+                    logger.debug('尝试解析数据失败，返回%s，准备接收下一个数据', message_status)
+                    header_start_time = time.time()
+                logger.debug('当前缓冲区数据：[%s]', utils.byte_array_to_hex_string(self.data_buffer))
+                    
         return None
 
     def generate_mock_data(self):
@@ -114,7 +121,8 @@ class SerialModel:
         # 使用 SerialMessage 生成要发送的数据
         if serial_message is not None:
             for retry_count in range(max_retries):
-                self.serial.send_data(serial_message.full_data)  # 假设 SerialOperator 有 send_data 方法
+                logger.info('开始第 %d 次请求，准备发送数据：%s', retry_count + 1, serial_message.full_data)
+                self.serial.send_data(serial_message.full_data)
                 start_time = time.time()
                 while (time.time() - start_time) < timeout:
                     response_data = self.receive_data()
@@ -126,7 +134,7 @@ class SerialModel:
                         else:
                             logger.warning('收到无效的应答数据，准备重试')
                     time.sleep(0.1)
-                logger.warning('第 %d 次请求无应答，准备重试', retry_count + 1)
+                logger.warning('第 %d 次请求无应答', retry_count + 1)
             logger.error('连续 %d 次请求无应答，放弃请求', max_retries)
         return None
     
@@ -245,3 +253,19 @@ class SerialModel:
             logger.error('获取密钥状态失败')
             return None, None
 
+if __name__ == "__main__":
+    # 创建 SerialModel 实例
+    model = SerialModel()
+
+    # 生成模拟数据
+    mock_message = SerialMessage.generate_new_message(
+            ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_READ_SW_VERSION, ValidValues.DATA_EMPTY)
+    if mock_message is not None:
+        # 调用 send_request_with_retry 方法
+        response = model.send_request_with_retry(mock_message)
+        if response is not None:
+            print("收到有效响应:", response)
+        else:
+            print("未收到有效响应")
+    else:
+        print("生成模拟数据失败")

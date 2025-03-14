@@ -18,15 +18,27 @@ class MyComboBoxControl(QComboBox):
         # 先清空原有的选项
         self.clear()
         # 初始化串口列表
-        available_ports = SerialOperator().list_available_ports()
+        available_ports = SerialOperator().list_available_ports(True)
         logger.info('可用串口:%s', available_ports)
+        # 计算滚动条宽度
+        scrollbar_width = self.view().verticalScrollBar().sizeHint().width()
+        # 计算视图的内边距
+        view_margins = self.view().contentsMargins()
+        total_margin_width = view_margins.left() + view_margins.right()
+        max_width = 0
         for port in available_ports:
             self.addItem(port)
 
-            width = font_metrics.horizontalAdvance (port) + 10
-            previous_width = self.width()
-            if previous_width < width:
-                self.view().setFixedWidth(width)
+            # width = font_metrics.horizontalAdvance (port) + 30
+            # 计算文本的宽度
+            text_width = font_metrics.horizontalAdvance(port)
+            # 计算包含滚动条和内边距的总宽度
+            width = text_width + scrollbar_width + total_margin_width + 10
+            if width > max_width:
+                max_width = width
+
+        if max_width > self.maximumWidth():
+            self.view().setFixedWidth(max_width)
 
         if self.count() >= index:
             self.setCurrentIndex(index)
