@@ -1,5 +1,4 @@
 
-    config, result = ConfigParams.from_toml_data('tool-config.toml')
-    print(config)
-    print(result)
-    print(ConfigParams.to_config_str(config.data))
+
+# 在程序开始时删除过期日志
+delete_expired_logs()

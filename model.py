@@ -5,11 +5,13 @@ Model类
 '''
 import time
 import random
+import logging
 import serial
-from serial_handle import SerialOperator
-from data_processor import SerialMessage, ValidValues, ConfigParams, MIN_DATA_LENGTH
-import common_data_utils as utils
-from logger import logger
+from utils.serial_handle import SerialOperator
+from utils.data_processor import SerialMessage, ValidValues, ConfigParams, MIN_DATA_LENGTH
+import utils.common_data_utils as utils
+
+logger = logging.getLogger(__name__)
 
 class SerialModel:
     def __init__(self):

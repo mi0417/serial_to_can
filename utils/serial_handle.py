@@ -4,8 +4,10 @@
 import serial
 import serial.tools.list_ports
 
-from logger import logger
-from common_data_utils import byte_array_to_hex_string
+from utils.common_data_utils import byte_array_to_hex_string
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SerialOperator:
     '''

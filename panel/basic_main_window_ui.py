@@ -18,8 +18,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QGridLayout,
     QGroupBox, QHBoxLayout, QLabel, QListWidget,
     QListWidgetItem, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QSpacerItem, QStatusBar, QVBoxLayout,
-    QWidget)
+    QSizePolicy, QSpacerItem, QStackedWidget, QStatusBar,
+    QTextEdit, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -32,8 +32,18 @@ class Ui_MainWindow(object):
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.widget = QWidget(self.centralwidget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.stackedWidget = QStackedWidget(self.centralwidget)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.configPage = QWidget()
+        self.configPage.setObjectName(u"configPage")
+        self.verticalLayout_2 = QVBoxLayout(self.configPage)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(9, 9, 9, 9)
+        self.widget = QWidget(self.configPage)
         self.widget.setObjectName(u"widget")
         self.widget.setMaximumSize(QSize(16777215, 90))
         self.horizontalLayout = QHBoxLayout(self.widget)
@@ -58,9 +68,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.swVerLabel)
 
 
-        self.verticalLayout.addWidget(self.widget)
+        self.verticalLayout_2.addWidget(self.widget)
 
-        self.groupBox = QGroupBox(self.centralwidget)
+        self.groupBox = QGroupBox(self.configPage)
         self.groupBox.setObjectName(u"groupBox")
         self.groupBox.setMaximumSize(QSize(16777215, 16777215))
         self.horizontalLayout_2 = QHBoxLayout(self.groupBox)
@@ -96,16 +106,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.oneKeyButton)
 
 
-        self.verticalLayout.addWidget(self.groupBox)
+        self.verticalLayout_2.addWidget(self.groupBox)
 
-        self.groupBox_2 = QGroupBox(self.centralwidget)
+        self.groupBox_2 = QGroupBox(self.configPage)
         self.groupBox_2.setObjectName(u"groupBox_2")
-        self.verticalLayout_2 = QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_3 = QVBoxLayout(self.groupBox_2)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.getKeyStatusButton = QPushButton(self.groupBox_2)
         self.getKeyStatusButton.setObjectName(u"getKeyStatusButton")
 
-        self.verticalLayout_2.addWidget(self.getKeyStatusButton)
+        self.verticalLayout_3.addWidget(self.getKeyStatusButton)
 
         self.keyWidget = QWidget(self.groupBox_2)
         self.keyWidget.setObjectName(u"keyWidget")
@@ -256,16 +266,51 @@ class Ui_MainWindow(object):
         self.gridLayout.setColumnStretch(1, 1)
         self.gridLayout.setColumnStretch(2, 1)
 
-        self.verticalLayout_2.addWidget(self.keyWidget)
+        self.verticalLayout_3.addWidget(self.keyWidget)
 
         self.outputWidget = QListWidget(self.groupBox_2)
         self.outputWidget.setObjectName(u"outputWidget")
         self.outputWidget.setSelectionMode(QAbstractItemView.SelectionMode.ContiguousSelection)
 
-        self.verticalLayout_2.addWidget(self.outputWidget)
+        self.verticalLayout_3.addWidget(self.outputWidget)
 
 
-        self.verticalLayout.addWidget(self.groupBox_2)
+        self.verticalLayout_2.addWidget(self.groupBox_2)
+
+        self.stackedWidget.addWidget(self.configPage)
+        self.logPage = QWidget()
+        self.logPage.setObjectName(u"logPage")
+        self.verticalLayout_4 = QVBoxLayout(self.logPage)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.widget_2 = QWidget(self.logPage)
+        self.widget_2.setObjectName(u"widget_2")
+        self.horizontalLayout_4 = QHBoxLayout(self.widget_2)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.clearLogButton_2 = QPushButton(self.widget_2)
+        self.clearLogButton_2.setObjectName(u"clearLogButton_2")
+
+        self.horizontalLayout_4.addWidget(self.clearLogButton_2)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_2)
+
+        self.saveLogButton_2 = QPushButton(self.widget_2)
+        self.saveLogButton_2.setObjectName(u"saveLogButton_2")
+
+        self.horizontalLayout_4.addWidget(self.saveLogButton_2)
+
+
+        self.verticalLayout_4.addWidget(self.widget_2)
+
+        self.logEdit = QTextEdit(self.logPage)
+        self.logEdit.setObjectName(u"logEdit")
+
+        self.verticalLayout_4.addWidget(self.logEdit)
+
+        self.stackedWidget.addWidget(self.logPage)
+
+        self.verticalLayout.addWidget(self.stackedWidget)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
@@ -278,11 +323,17 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
+        self.stackedWidget.setCurrentIndex(0)
+
+
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Serial2CAN", None))
+#if QT_CONFIG(tooltip)
+        self.stackedWidget.setToolTip("")
+#endif // QT_CONFIG(tooltip)
         self.connectButton.setText(QCoreApplication.translate("MainWindow", u"\u8fde\u63a5", None))
         self.swVerLabel.setText(QCoreApplication.translate("MainWindow", u"\u8f6f\u4ef6\u7248\u672c\u53f7\n"
 "\u8f6f\u4ef6\u7248\u672c\u53f7", None))
@@ -318,5 +369,7 @@ class Ui_MainWindow(object):
         self.oppoLabel.setText(QCoreApplication.translate("MainWindow", u"OPPO", None))
         self.vivoLabel.setText(QCoreApplication.translate("MainWindow", u"vivo", None))
         self.oppoFastChargeStatus.setText("")
+        self.clearLogButton_2.setText(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a", None))
+        self.saveLogButton_2.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
     # retranslateUi
 

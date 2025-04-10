@@ -1,7 +1,9 @@
 '''
     通用的数据处理
 '''
-from logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 def hex_str_to_little_endian_array(hex_str, byte_count=0):
     '''

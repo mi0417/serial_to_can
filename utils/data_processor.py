@@ -1,10 +1,12 @@
 '''
     业务相关的数据处理
 '''
-import common_data_utils as utils
-import file_utils as file_utils
+import utils.common_data_utils as utils
+import utils.file_utils as file_utils
 
-from logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 # 定义消息各部分的长度（占字节数）
 HEADER_LENGTH       = 3     # 数据头长度

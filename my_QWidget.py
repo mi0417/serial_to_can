@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QFontMetrics
 #导入串口模块
-from serial_handle import SerialOperator
-from logger import logger
+from utils.serial_handle import SerialOperator
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MyComboBoxControl(QComboBox):
 

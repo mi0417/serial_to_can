@@ -2,7 +2,9 @@ import sys
 import os
 import toml
 
-from logger import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 def resource_path(relative_path):
     ''' 一般用于内部资源文件 Get the absolute path to the resource, works for dev and for PyInstaller '''

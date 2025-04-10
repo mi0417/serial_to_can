@@ -2,16 +2,17 @@
 view 类
 '''
 import ctypes
+import logging
 from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics
 from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem
 from PySide6.QtCore import Qt, QSize
 
-from basic_main_window_ui import Ui_MainWindow
+from panel.basic_main_window_ui import Ui_MainWindow
 
-from serial_handle import SerialOperator
-from logger import logger
+from utils.serial_handle import SerialOperator
 from datetime import datetime
 
+logger = logging.getLogger(__name__)
 class MyComboBoxControl(QComboBox):
 
     def __init__(self, parent = None):

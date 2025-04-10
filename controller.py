@@ -1,6 +1,6 @@
 
 import time
-import re
+import logging
 import queue
 import serial
 from PySide6.QtCore import QObject, Signal, QThread
@@ -8,9 +8,10 @@ from PySide6.QtCore import QObject, Signal, QThread
 from model import SerialModel
 from view import View
 
-from data_processor import ConfigParams
-from file_utils import exe_absolute_path, is_file_exists
-from logger import logger  
+from utils.data_processor import ConfigParams
+from utils.file_utils import exe_absolute_path, is_file_exists
+
+logger = logging.getLogger(__name__)
 
 class SerialCommunicationThread(QThread):
     '''
