@@ -1,3 +1,8 @@
+'''
+自定义下拉框
+目前已弃用，合并入view中，之前与生成的ui.py搭配使用，生成ui.py后复制出ui2.py，替换ui2.py中的下拉框控件，
+此方法在ui变更时不便，需要手动merge不同，不复制出2则会被替换，view中直接覆盖则无需手动修改ui.py
+'''
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QFontMetrics
 #导入串口模块

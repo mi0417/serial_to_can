@@ -20,6 +20,12 @@ def exe_absolute_path(relative_path):
     base_path = os.path.dirname(os.path.realpath(sys.argv[0]))
     return os.path.join(base_path, relative_path)
 
+def get_exe_dir():
+    ''' 获取可执行文件所在目录（打包生成的exe文件的绝对路径）'''
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(sys.argv[0]))
+
 def is_file_exists(file_path):
     '''
     判断指定文件是否存在

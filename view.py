@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot
 from panel.basic_main_window_ui import Ui_MainWindow
 
 from utils.serial_handle import SerialOperator
-from utils.file_utils import resource_path
+from utils.file_utils import exe_absolute_path
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -439,7 +439,7 @@ class View(QMainWindow):
 
     def load_last_config(self):
         """加载上次保存的配置文件路径"""
-        config_file = resource_path('last_config.ini')
+        config_file = exe_absolute_path('last_config.ini')
         if os.path.exists(config_file):
             try:
                 with open(config_file, 'r') as f:
@@ -453,7 +453,7 @@ class View(QMainWindow):
 
     def save_last_config(self):
         """保存当前配置文件路径"""
-        config_file = resource_path('last_config.ini')
+        config_file = exe_absolute_path('last_config.ini')
         try:
             with open(config_file, 'w') as f:
                 if self.config_path:

@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QGroupBox, QLineEdit,
     QListWidget, QListWidgetItem, QMainWindow, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QWidget)
 
-from my_QWidget import MyComboBoxControl
+from panel.my_QWidget import MyComboBoxControl
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
