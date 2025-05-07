@@ -2,6 +2,7 @@
     通用的数据处理
 '''
 import logging
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -290,3 +291,8 @@ def int_to_fixed_bytes(num, length):
     except OverflowError:
         logger.error(f'整数 {num}（{hex(num)}） 无法用 {length} 字节表示。')
         return None
+    
+def format_timestamp(timestamp):
+    dt_obj = datetime.datetime.fromtimestamp(timestamp)
+    formatted_time = dt_obj.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    return formatted_time

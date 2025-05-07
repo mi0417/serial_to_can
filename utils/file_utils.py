@@ -34,12 +34,16 @@ def is_file_exists(file_path):
     :param file_path: 文件的路径
     :return: 如果文件存在返回 True，否则返回 False
     '''
-    exists = os.path.exists(file_path)
-    if exists:
-        logger.info(f'文件 {file_path} 存在。')
-    else:
-        logger.info(f'文件 {file_path} 不存在。')
-    return exists
+    try:
+        exists = os.path.exists(file_path)
+        if exists:
+            logger.info(f'文件 {file_path} 存在。')
+        else:
+            logger.info(f'文件 {file_path} 不存在。')
+        return exists
+    except Exception as e:
+        logger.error(f'检查文件 {file_path} 时出错: {e}')
+        return False
     
 def create_file(file_path):
     '''

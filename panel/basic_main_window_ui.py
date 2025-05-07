@@ -15,17 +15,18 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QGridLayout,
-    QGroupBox, QHBoxLayout, QLabel, QListWidget,
-    QListWidgetItem, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QSpacerItem, QStackedWidget, QStatusBar,
-    QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QCommandLinkButton,
+    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QStackedWidget, QStatusBar, QTextEdit, QVBoxLayout,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(560, 600)
+        MainWindow.resize(560, 705)
         icon = QIcon()
         icon.addFile(u"imgs/icon (2).png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         MainWindow.setWindowIcon(icon)
@@ -35,19 +36,12 @@ class Ui_MainWindow(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.stackedWidget = QStackedWidget(self.centralwidget)
-        self.stackedWidget.setObjectName(u"stackedWidget")
-        self.configPage = QWidget()
-        self.configPage.setObjectName(u"configPage")
-        self.verticalLayout_2 = QVBoxLayout(self.configPage)
-        self.verticalLayout_2.setSpacing(6)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(9, 9, 9, 9)
-        self.widget = QWidget(self.configPage)
+        self.widget = QWidget(self.centralwidget)
         self.widget.setObjectName(u"widget")
         self.widget.setMaximumSize(QSize(16777215, 90))
         self.horizontalLayout = QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(9, 6, 9, 0)
         self.serialBox = QComboBox(self.widget)
         self.serialBox.setObjectName(u"serialBox")
         self.serialBox.setMaximumSize(QSize(100, 16777215))
@@ -67,8 +61,44 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.swVerLabel)
 
+        self.changePageBtn = QCommandLinkButton(self.widget)
+        self.changePageBtn.setObjectName(u"changePageBtn")
+        self.changePageBtn.setMaximumSize(QSize(100, 16777215))
 
-        self.verticalLayout_2.addWidget(self.widget)
+        self.horizontalLayout.addWidget(self.changePageBtn)
+
+
+        self.verticalLayout.addWidget(self.widget)
+
+        self.stackedWidget = QStackedWidget(self.centralwidget)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.configPage = QWidget()
+        self.configPage.setObjectName(u"configPage")
+        self.verticalLayout_2 = QVBoxLayout(self.configPage)
+        self.verticalLayout_2.setSpacing(6)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(9, 9, 9, 9)
+        self.groupBox_3 = QGroupBox(self.configPage)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        self.horizontalLayout_3 = QHBoxLayout(self.groupBox_3)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.configFilePathEdit = QLineEdit(self.groupBox_3)
+        self.configFilePathEdit.setObjectName(u"configFilePathEdit")
+
+        self.horizontalLayout_3.addWidget(self.configFilePathEdit)
+
+        self.selectConfigBtn = QPushButton(self.groupBox_3)
+        self.selectConfigBtn.setObjectName(u"selectConfigBtn")
+
+        self.horizontalLayout_3.addWidget(self.selectConfigBtn)
+
+        self.inputConfigBtn = QPushButton(self.groupBox_3)
+        self.inputConfigBtn.setObjectName(u"inputConfigBtn")
+
+        self.horizontalLayout_3.addWidget(self.inputConfigBtn)
+
+
+        self.verticalLayout_2.addWidget(self.groupBox_3)
 
         self.groupBox = QGroupBox(self.configPage)
         self.groupBox.setObjectName(u"groupBox")
@@ -286,25 +316,32 @@ class Ui_MainWindow(object):
         self.widget_2.setObjectName(u"widget_2")
         self.horizontalLayout_4 = QHBoxLayout(self.widget_2)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.clearLogButton_2 = QPushButton(self.widget_2)
-        self.clearLogButton_2.setObjectName(u"clearLogButton_2")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.clearLogBtn = QPushButton(self.widget_2)
+        self.clearLogBtn.setObjectName(u"clearLogBtn")
 
-        self.horizontalLayout_4.addWidget(self.clearLogButton_2)
+        self.horizontalLayout_4.addWidget(self.clearLogBtn)
 
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_2)
 
-        self.saveLogButton_2 = QPushButton(self.widget_2)
-        self.saveLogButton_2.setObjectName(u"saveLogButton_2")
+        self.scrollBottomBtn = QPushButton(self.widget_2)
+        self.scrollBottomBtn.setObjectName(u"scrollBottomBtn")
 
-        self.horizontalLayout_4.addWidget(self.saveLogButton_2)
+        self.horizontalLayout_4.addWidget(self.scrollBottomBtn)
+
+        self.saveLogBtn = QPushButton(self.widget_2)
+        self.saveLogBtn.setObjectName(u"saveLogBtn")
+
+        self.horizontalLayout_4.addWidget(self.saveLogBtn)
 
 
         self.verticalLayout_4.addWidget(self.widget_2)
 
         self.logEdit = QTextEdit(self.logPage)
         self.logEdit.setObjectName(u"logEdit")
+        self.logEdit.setReadOnly(True)
 
         self.verticalLayout_4.addWidget(self.logEdit)
 
@@ -331,12 +368,15 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Serial2CAN", None))
+        self.connectButton.setText(QCoreApplication.translate("MainWindow", u"\u8fde\u63a5", None))
+        self.swVerLabel.setText("")
+        self.changePageBtn.setText(QCoreApplication.translate("MainWindow", u"\u4e32\u53e3log", None))
 #if QT_CONFIG(tooltip)
         self.stackedWidget.setToolTip("")
 #endif // QT_CONFIG(tooltip)
-        self.connectButton.setText(QCoreApplication.translate("MainWindow", u"\u8fde\u63a5", None))
-        self.swVerLabel.setText(QCoreApplication.translate("MainWindow", u"\u8f6f\u4ef6\u7248\u672c\u53f7\n"
-"\u8f6f\u4ef6\u7248\u672c\u53f7", None))
+        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165\u8bbe\u7f6e\u6587\u4ef6", None))
+        self.selectConfigBtn.setText(QCoreApplication.translate("MainWindow", u"\u9009\u62e9\u6587\u4ef6", None))
+        self.inputConfigBtn.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165\u8bbe\u7f6e", None))
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u8bbe\u5907\u914d\u7f6e", None))
         self.getSwVerButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u8f6f\u4ef6\u7248\u672c\u53f7", None))
         self.resetButton.setText(QCoreApplication.translate("MainWindow", u"\u590d\u4f4d", None))
@@ -369,7 +409,8 @@ class Ui_MainWindow(object):
         self.oppoLabel.setText(QCoreApplication.translate("MainWindow", u"OPPO", None))
         self.vivoLabel.setText(QCoreApplication.translate("MainWindow", u"vivo", None))
         self.oppoFastChargeStatus.setText("")
-        self.clearLogButton_2.setText(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a", None))
-        self.saveLogButton_2.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
+        self.clearLogBtn.setText(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a", None))
+        self.scrollBottomBtn.setText(QCoreApplication.translate("MainWindow", u"\u6eda\u52a8\u5230\u7ed3\u5c3e", None))
+        self.saveLogBtn.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
     # retranslateUi
 

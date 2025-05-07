@@ -30,14 +30,14 @@ def configure_logger(path=LOG_DIR, backup_day=BACKUP_DAY):
     console_handler.setLevel(logging.DEBUG)       
 
     # 创建一个按天切割的文件处理器，保存debug级的log
-    file_handler = TimedRotatingFileHandler(
-        filename=f'{path}/app_{formatted_date}_debug.log',
-        when='D',  # 按天切割
-        interval=1,  # 每天切割一次
-        backupCount=backup_day,  # 保留最近 7 天的日志文件
-        encoding='utf-8'  # 指定日志文件编码为 UTF-8
-    )
-    file_handler.setLevel(logging.DEBUG)
+    # file_handler = TimedRotatingFileHandler(
+    #     filename=f'{path}/app_{formatted_date}_debug.log',
+    #     when='D',  # 按天切割
+    #     interval=1,  # 每天切割一次
+    #     backupCount=backup_day,  # 保留最近 7 天的日志文件
+    #     encoding='utf-8'  # 指定日志文件编码为 UTF-8
+    # )
+    # file_handler.setLevel(logging.DEBUG)
 
     # 创建一个按天切割的文件处理器，保存info级的log
     file_handler_info = TimedRotatingFileHandler(
@@ -53,14 +53,14 @@ def configure_logger(path=LOG_DIR, backup_day=BACKUP_DAY):
     formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)7s] [%(filename)16s:%(lineno)-3d] %(message)s',
                         datefmt = '%m-%d %H:%M:%S')
     console_handler.setFormatter(formatter)
-    formatter = logging.Formatter('%(asctime)s - %(name)20s - %(levelname)7s - [%(filename)16s:%(lineno)-3d] - %(message)s')
-    file_handler.setFormatter(formatter)
+    # formatter = logging.Formatter('%(asctime)s - %(name)20s - %(levelname)7s - [%(filename)16s:%(lineno)-3d] - %(message)s')
+    # file_handler.setFormatter(formatter)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler_info.setFormatter(formatter)
 
     # 将处理程序添加到日志记录器
     root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
+    # root_logger.addHandler(file_handler)
     root_logger.addHandler(file_handler_info)
 
     # logging.basicConfig(format = '%(asctime)s.%(msecs)03d [%(levelname)-7s] [%(filename)16s:%(lineno)-3d] %(message)s',

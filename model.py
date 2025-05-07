@@ -7,6 +7,7 @@ import time
 import random
 import logging
 import serial
+import threading
 from utils.serial_handle import SerialOperator
 from utils.data_processor import SerialMessage, ValidValues, ConfigParams, MIN_DATA_LENGTH
 import utils.common_data_utils as utils
@@ -19,6 +20,12 @@ class SerialModel:
         self.last_receive_time = time.time()  # 初始化时间戳
         self.serial = SerialOperator()  # 只保留一个串口操作对象
         self.data_buffer = bytearray()  # 添加数据缓冲区
+        self.log_buffer = bytearray()  # 独立日志缓冲区，用于显示串口log
+        self.buffer_lock = threading.Lock()  # 缓冲区锁
+        self.sent_buffer = []  # 已发送指令缓冲区
+        self.sent_lock = threading.Lock()  # 缓冲区锁
+        self.expect_response = False  # 响应期待标志位
+        self.active_request_command = None  # 当前活动请求的命令类型
 
     def get_available_ports(self):
         '''
@@ -44,6 +51,13 @@ class SerialModel:
         返回串口打开状态
         '''
         return self.serial.is_open
+    
+    def get_realtime_logs(self):
+        '''获取实时日志数据'''
+        with self.buffer_lock:
+            log_data = bytes(self.log_buffer)
+            self.log_buffer.clear()  # 清空已读取的日志数据
+        return log_data
 
     def receive_data(self):
         '''
@@ -53,16 +67,21 @@ class SerialModel:
                     
         if data:
             self.last_receive_time = time.time()  # 更新时间戳
-            self.data_buffer.extend(data)  # 将接收到的数据添加到缓冲区
+            with self.buffer_lock:
+                # 仅在非主动请求时填充日志缓冲区
+                if not self.expect_response:
+                    self.log_buffer.extend(data)
+                self.data_buffer.extend(data)
             
         # 尝试解析缓冲区中的数据，接收完整数据的超时时间设为1s
-        if len(self.data_buffer) >= MIN_DATA_LENGTH:
+        if self.expect_response and len(self.data_buffer) >= MIN_DATA_LENGTH:
             serial_message, message_status = SerialMessage.from_serial_data(self.data_buffer)
             if serial_message:
                 # 解析成功，移除已解析的数据
                 parsed_length = serial_message.data_length
-                self.data_buffer = self.data_buffer[parsed_length:]
-                return serial_message
+                with self.buffer_lock:
+                    self.data_buffer = self.data_buffer[parsed_length:]
+                return serial_message  # 返回解析后的数据用于后续处理
             else:
                 # 解析失败，判断是否为数据格式错误
                 if message_status in [SerialMessage.HEADER_ERROR, SerialMessage.CRC_ERROR, SerialMessage.END_SYMBOL_ERROR]:  # 数据格式错误
@@ -72,19 +91,27 @@ class SerialModel:
                             # 找到下一个消息头，移除之前的无效数据
                             discarded_data = self.data_buffer[:i]
                             if discarded_data:
-                                logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(discarded_data))
+                                # logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(discarded_data))
+                                logger.warning('丢弃无效数据%d字节', len(discarded_data))
                         
                             self.data_buffer = self.data_buffer[i:]
                             break
                     else:
                         # 没有找到下一个消息头，清空缓冲区
-                        logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(self.data_buffer))
+                        # logger.warning('丢弃无效数据: [%s]', utils.byte_array_to_hex_string(self.data_buffer))
+                        logger.warning('丢弃无效数据%d字节', len(self.data_buffer))
                         self.data_buffer = bytearray()
                 else:  
                     logger.debug('尝试解析数据失败，返回%s，准备接收下一个数据', message_status)
                     header_start_time = time.time()
                 logger.debug('当前缓冲区数据：[%s]', utils.byte_array_to_hex_string(self.data_buffer))
                     
+        else:
+            # 非请求模式直接处理为日志数据
+            if data:
+                with self.buffer_lock:
+                    self.log_buffer.extend(data)
+                    self.data_buffer.clear()
         return None
 
     def generate_mock_data(self):
@@ -111,6 +138,13 @@ class SerialModel:
             logger.error('生成模拟数据时出错: %s', e)
             return None
 
+    def get_sent_commands(self):
+        """获取并清空已发送指令缓冲区"""
+        with self.sent_lock:
+            commands = self.sent_buffer.copy()
+            self.sent_buffer.clear()
+        return commands
+    
     def send_request_with_retry(self, serial_message:SerialMessage):
         '''
         发送请求并处理重试逻辑
@@ -118,27 +152,42 @@ class SerialModel:
         :param request_data: 要发送的 SerialMessage 类型的请求数据
         :return:SerialMessage 若收到应答返回应答数据，若连续 3 次无应答返回 None
         '''
-        timeout = 1
-        max_retries = 3
-        # 使用 SerialMessage 生成要发送的数据
-        if serial_message is not None:
-            for retry_count in range(max_retries):
-                logger.info('开始第 %d 次请求，准备发送数据：%s', retry_count + 1, serial_message.full_data)
-                self.serial.send_data(serial_message.full_data)
-                start_time = time.time()
-                while (time.time() - start_time) < timeout:
-                    response_data = self.receive_data()
-                    if response_data is not None:
-                        if response_data.data_type == ValidValues.DATA_TYPE_RESPONSE \
-                            and response_data.command == serial_message.command:
-                            
-                            return response_data
-                        else:
-                            logger.warning('收到无效的应答数据，准备重试')
-                    time.sleep(0.1)
-                logger.warning('第 %d 次请求无应答', retry_count + 1)
-            logger.error('连续 %d 次请求无应答，放弃请求', max_retries)
-        return None
+        self.expect_response = True  # 设置响应期待标志
+        self.active_request_command = serial_message.command
+        try:
+            timeout = 1
+            max_retries = 3
+            with self.buffer_lock:
+                self.data_buffer.clear()  # 发送前清空数据缓冲区
+            # 使用 SerialMessage 生成要发送的数据
+            if serial_message is not None:
+                for retry_count in range(max_retries):
+                    logger.info('开始第 %d 次请求，准备发送数据：%s', retry_count + 1, serial_message.full_data)
+                    self.serial.send_data(serial_message.full_data)
+                    start_time = time.time()
+                    # 记录发送信息到缓冲区
+                    with self.sent_lock:
+                        self.sent_buffer.append({
+                            'data': serial_message.full_data,
+                            'retry': retry_count+1,
+                            'timestamp': start_time  # 时间戳
+                        })
+                    while (time.time() - start_time) < timeout:
+                        response_data = self.receive_data()
+                        if response_data is not None:
+                            if response_data.data_type == ValidValues.DATA_TYPE_RESPONSE \
+                                and response_data.command == serial_message.command:
+                                
+                                return response_data
+                            else:
+                                logger.warning('收到无效的应答数据，准备重试')
+                        time.sleep(0.1)
+                    logger.warning('第 %d 次请求无应答', retry_count + 1)
+                logger.error('连续 %d 次请求无应答，放弃请求', max_retries)
+            return None
+        finally:
+            self.expect_response = False  # 重置响应期待标志
+            self.active_request_command = None
     
     def get_software_version(self):
         '''
