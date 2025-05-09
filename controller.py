@@ -28,7 +28,7 @@ class SerialCommunicationThread(QThread):
     read_config_result_signal = Signal(str, str)  # 自定义信号，用于传递读取配置结果给主线程
     get_key_status_result_signal = Signal(list, str)  # 自定义信号，用于传递获取密钥状态结果给主线程
 
-    # 新增请求队列
+    # 请求队列
     _request_queue = queue.Queue()
 
     def __init__(self, model: SerialModel, port_name, baudrate, bytesize=serial.EIGHTBITS, stopbits=serial.STOPBITS_ONE, timeout=1, toml_path = 'tool-config.toml', data_queue=None):
@@ -61,7 +61,7 @@ class SerialCommunicationThread(QThread):
                     if not self._request_queue.empty():
                         req = self._request_queue.get()
                         # 分离耗时操作到工作线程
-                        self.start_async_request(req)  # 新增异步处理方法
+                        self.start_async_request(req)  # 异步处理方法
 
                     # 获取已发送指令并处理
                     sent_commands = self.model.get_sent_commands()
@@ -69,16 +69,20 @@ class SerialCommunicationThread(QThread):
                         # hex_data = byte_array_to_hex_string(cmd['data'])
                         # status = f"重试 ({cmd['retry']}/{cmd['max_retries']}) {hex_data}"
                         self.data_received.emit((format_timestamp(cmd['timestamp']), cmd['data']), View.LOG_SEND, View.HEX)
+
+                    receive_data = self.model.get_received_data()
+                    if receive_data:
+                        self.data_received.emit(receive_data, View.LOG_RECEIVE, View.HEX)
                     
-                    # 接收数据（receive_data从串口接收数据，没有这一步log_data获取不到缓冲区数据），根据类型emit，无对应类型则输出信息
-                    message = self.model.receive_data()
-                    if message:
-                        self.data_received.emit(message, self.LOG_RECEIVE, View.HEX)
-                    
-                    # 定时获取日志缓冲区（ASCII格式）
-                    log_data = self.model.get_realtime_logs()
-                    if log_data:
-                        self.data_received.emit(log_data, View.LOG_RECEIVE, View.ASCII)
+                    # 仅在非主动请求时处理常规接收
+                    if not self.model.expect_response:
+                        # 接收数据（receive_data从串口接收数据，没有这一步log_data获取不到缓冲区数据），根据类型emit，无对应类型则输出信息
+                        message = self.model.receive_data()
+                        
+                        # 定时获取日志缓冲区（ASCII格式）
+                        log_data = self.model.get_realtime_logs()
+                        if log_data:
+                            self.data_received.emit(log_data, View.LOG_RECEIVE, View.ASCII)
                     # pass
                 except Exception as e:
                     logger.error('Error receiving data from serial: %s', e)
@@ -88,7 +92,7 @@ class SerialCommunicationThread(QThread):
 
     
 
-    # 新增异步处理方法
+    # 异步处理方法
     def start_async_request(self, req):
         req_method = getattr(self.model, req['method'])
         class RequestWorker(QRunnable):
@@ -362,7 +366,7 @@ class Controller(QObject):
     def handle_received_sw_version(self, version):
         if version !=SerialCommunicationThread.EMIT_STR_ERROR:
             self.view.ui.swVerLabel.setText(version)
-            self.view.append_to_output_widget(f'软件版本号 {version}', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget(f'软件版本号 {version}', self.view.LOG_TYPE_DATA)
             self.view.change_label_text(self.view.ui.swVerLabel, version)
         else:
             self.view.ui.swVerLabel.setText('获取软件版本号失败')

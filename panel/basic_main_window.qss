@@ -12,3 +12,9 @@ QWidget#keyWidget QLabel {
     margin: 0;
     border-radius: 3px;
 }
+
+QCommandLinkButton#changePageBtn {
+    vertical-align:middle;/* 无效 */
+    font-size: 12px;
+    font-weight: bold;
+}

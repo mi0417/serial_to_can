@@ -20,6 +20,7 @@ class SerialModel:
         self.last_receive_time = time.time()  # 初始化时间戳
         self.serial = SerialOperator()  # 只保留一个串口操作对象
         self.data_buffer = bytearray()  # 添加数据缓冲区
+        self.receive_buffer = bytearray()  # 接收数据缓冲区
         self.log_buffer = bytearray()  # 独立日志缓冲区，用于显示串口log
         self.buffer_lock = threading.Lock()  # 缓冲区锁
         self.sent_buffer = []  # 已发送指令缓冲区
@@ -72,15 +73,21 @@ class SerialModel:
                 if not self.expect_response:
                     self.log_buffer.extend(data)
                 self.data_buffer.extend(data)
+                # logger.debug('当前缓冲区数据：[%s]', utils.byte_array_to_hex_string(self.data_buffer))
             
         # 尝试解析缓冲区中的数据，接收完整数据的超时时间设为1s
         if self.expect_response and len(self.data_buffer) >= MIN_DATA_LENGTH:
+            # logger.debug('开始尝试解析数据')
             serial_message, message_status = SerialMessage.from_serial_data(self.data_buffer)
+            # logger.debug('解析结果serial_message：%s', serial_message)
+            # logger.debug('解析结果message_status：%s', message_status)
             if serial_message:
                 # 解析成功，移除已解析的数据
                 parsed_length = serial_message.data_length
                 with self.buffer_lock:
+                    self.receive_buffer = self.data_buffer[:parsed_length]
                     self.data_buffer = self.data_buffer[parsed_length:]
+                logger.debug('解析结果serial_message：%s', serial_message)
                 return serial_message  # 返回解析后的数据用于后续处理
             else:
                 # 解析失败，判断是否为数据格式错误
@@ -145,6 +152,13 @@ class SerialModel:
             self.sent_buffer.clear()
         return commands
     
+    def get_received_data(self):
+        """获取并清空接收数据缓冲区"""
+        with self.buffer_lock:
+            received_data = bytes(self.receive_buffer)
+            self.receive_buffer.clear()
+        return received_data
+    
     def send_request_with_retry(self, serial_message:SerialMessage):
         '''
         发送请求并处理重试逻辑
@@ -174,6 +188,7 @@ class SerialModel:
                         })
                     while (time.time() - start_time) < timeout:
                         response_data = self.receive_data()
+                        logger.debug('第 %d 次请求收到应答数据：%s', retry_count + 1, response_data)
                         if response_data is not None:
                             if response_data.data_type == ValidValues.DATA_TYPE_RESPONSE \
                                 and response_data.command == serial_message.command:

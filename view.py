@@ -6,7 +6,8 @@ import logging
 import os
 from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics
 from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem, QFileDialog, QTextEdit, QApplication, QVBoxLayout, QWidget
-from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot
+from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot, QTimer
+
 
 from panel.basic_main_window_ui import Ui_MainWindow
 
@@ -61,9 +62,9 @@ class MyTextEdit(QTextEdit):
         super().__init__(parent)
         self.setReadOnly(True)
         self.scrollbar = self.verticalScrollBar()
-        self._message_queue = []  # 新增消息队列
-        self._processing = False  # 新增处理状态标志
-        self._lock = False  # 新增简单锁机制
+        self._message_queue = []  # 消息队列
+        self._processing = False  # 处理状态标志
+        self._lock = False  # 简单锁机制
 
     def append_text(self, text):
         # 将消息加入队列
@@ -72,6 +73,7 @@ class MyTextEdit(QTextEdit):
         if not self._lock:
             self._process_queue()
 
+    @Slot()
     def _process_queue(self):
         if self._message_queue:
             self._lock = True  # 加锁
@@ -157,6 +159,11 @@ class View(QMainWindow):
         '''
         # 设置列表部件允许换行
         self.ui.outputWidget.setWordWrap(True)
+        # 添加高度自适应逻辑
+        QTimer.singleShot(0, lambda: 
+            self.ui.changePageBtn.setMaximumHeight(
+                self.ui.changePageBtn.height()
+            ))
         
         # 重写QComboBox
         self.ui.serialBox = self.replace_combo_box(self.ui.serialBox, self)
@@ -312,7 +319,7 @@ class View(QMainWindow):
 
         output_widget.addItem(item)
         output_widget.scrollToBottom()
-        logger.debug('log: %s', message)
+        logger.debug('log_type:%s, log: %s', log_type, message)
 
     def on_scroll_bottom_clicked(self):
         """滚动到底部按钮点击事件处理"""
