@@ -236,7 +236,7 @@ class SerialModel:
         logger.error('复位失败')
         return False
     
-    def cofig_device(self, toml_path):
+    def config_device(self, toml_path):
         '''
         配置设备
         :param toml_path: toml文件路径

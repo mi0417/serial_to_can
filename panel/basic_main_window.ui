@@ -226,7 +226,7 @@
            <item>
             <widget class="QPushButton" name="oneKeyButton">
              <property name="toolTip">
-              <string>读版本号，配置参数，打印读取参数</string>
+              <string>配置参数，打印读取参数</string>
              </property>
              <property name="text">
               <string>一键配置</string>

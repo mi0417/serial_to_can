@@ -158,13 +158,19 @@ def array_to_ascii(byte_array):
     Returns:
         str: ASCII 字符串
     '''
-    if not isinstance(byte_array, (bytes, bytearray)):
-        # 可以选择抛出异常，也可以返回 None
-        # raise TypeError(f'Expected bytes or bytearray, got {type(byte_array).__name__}')
-        logger.error('Invalid byte array: %s', byte_array)
-        return None
-    ascii_str = byte_array.decode('ascii')
-    return ascii_str
+    try:
+        ascii_str = byte_array.decode('ascii', errors='replace')
+        # 保留换行符和回车符，其他控制字符替换为点
+        ascii_str = ''.join(
+            c if (ord(c) >= 32 or c in '\n\r\t')
+            else '.' if ord(c) < 128 
+            else '.' 
+            for c in ascii_str
+        )
+        return ascii_str
+    except Exception as e:
+        logger.error('Decoding error: %s', e)
+        return f"非ASCII数据: {e}"
 
 def hex_to_ascii(hex_str):
     '''

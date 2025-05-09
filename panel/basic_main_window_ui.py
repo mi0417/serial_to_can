@@ -387,7 +387,7 @@ class Ui_MainWindow(object):
         self.setConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u53c2\u6570\u914d\u7f6e", None))
         self.getConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u914d\u7f6e", None))
 #if QT_CONFIG(tooltip)
-        self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u7248\u672c\u53f7\uff0c\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
+        self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
 #endif // QT_CONFIG(tooltip)
         self.oneKeyButton.setText(QCoreApplication.translate("MainWindow", u"\u4e00\u952e\u914d\u7f6e", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c", None))

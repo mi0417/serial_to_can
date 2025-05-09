@@ -240,6 +240,24 @@ class View(QMainWindow):
         if selected_input:
             logger.debug('Selected %s: %d - %s', combobox.objectName(), selected_index, selected_input)
 
+    def disable_operation_buttons(self):
+        """禁用所有功能操作按钮"""
+        self.ui.getSwVerButton.setEnabled(False)
+        self.ui.resetButton.setEnabled(False)
+        self.ui.setConfigButton.setEnabled(False)
+        self.ui.getConfigButton.setEnabled(False)
+        self.ui.oneKeyButton.setEnabled(False)
+        self.ui.getKeyStatusButton.setEnabled(False)
+
+    def enable_operation_buttons(self):
+        """启用所有功能操作按钮""" 
+        self.ui.getSwVerButton.setEnabled(True)
+        self.ui.resetButton.setEnabled(True)
+        self.ui.setConfigButton.setEnabled(True)
+        self.ui.getConfigButton.setEnabled(True)
+        self.ui.oneKeyButton.setEnabled(True)
+        self.ui.getKeyStatusButton.setEnabled(True)
+
     def handle_change_page(self):
         """处理页面切换按钮点击事件"""
         current_widget = self.ui.stackedWidget.currentWidget()

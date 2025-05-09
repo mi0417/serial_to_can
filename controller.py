@@ -44,6 +44,8 @@ class SerialCommunicationThread(QThread):
         self.set_toml_path()
         self._running = True
         self.data_queue = data_queue
+        self._current_request = None  # 当前请求状态跟踪
+        self._is_processing = False  # 处理状态标志
 
     def run(self):
         logger.debug('串口子线程run %s', self)
@@ -58,8 +60,10 @@ class SerialCommunicationThread(QThread):
             while self._running and self.model.is_serial_open():
                 try:
                     # 请求处理逻辑
-                    if not self._request_queue.empty():
+                    if not self._is_processing and not self._request_queue.empty():
                         req = self._request_queue.get()
+                        self._is_processing = True
+                        self._current_request = req
                         # 分离耗时操作到工作线程
                         self.start_async_request(req)  # 异步处理方法
 
@@ -96,11 +100,12 @@ class SerialCommunicationThread(QThread):
     def start_async_request(self, req):
         req_method = getattr(self.model, req['method'])
         class RequestWorker(QRunnable):
-            def __init__(self, method, args, callback):
+            def __init__(self, method, args, callback, outer):
                 super().__init__()
                 self.method = method
                 self.args = args
                 self.callback = callback
+                self.outer = outer  # 外部类引用
 
             def run(self):
                 try:
@@ -108,11 +113,15 @@ class SerialCommunicationThread(QThread):
                     self.callback(result)
                 except Exception as e:
                     logger.error(f"异步请求执行失败: {e}")
+                finally:
+                    self.outer._is_processing = False  # 无论成功失败都重置状态
+                    self.outer._current_request = None
 
         worker = RequestWorker(
             req_method, 
             req.get('args', []), 
-            req['callback']
+            req['callback'],
+            self  # 外部类引用
         )
         QThreadPool.globalInstance().start(worker)
 
@@ -175,7 +184,7 @@ class SerialCommunicationThread(QThread):
             if result:
                 # 复位成功发起配置请求
                 self._request_queue.put({
-                    'method': 'cofig_device',
+                    'method': 'config_device',
                     'args': [toml_path],
                     'callback': config_callback
                 })
@@ -191,7 +200,7 @@ class SerialCommunicationThread(QThread):
         # if result:
         # # if self.reset_device():
 
-        #     result, message = self.model.cofig_device(toml_path)
+        #     result, message = self.model.config_device(toml_path)
         #     self.set_config_result_signal.emit(result, message)
         # else:
         #     self.set_config_result_signal.emit(False, '复位失败，未执行配置')
@@ -222,9 +231,9 @@ class SerialCommunicationThread(QThread):
         '''
         def _callback(result):
             if result is not None and result[0] is None and result[1] is None:
-                self.read_config_result_signal.emit(None, '读取失败')
+                self.get_key_status_result_signal.emit(None, '读取失败')
             else:
-                self.read_config_result_signal.emit(result[0], result[1])
+                self.get_key_status_result_signal.emit(result[0], result[1])
         
         self._request_queue.put({
             'method': 'get_key_status',
@@ -282,6 +291,7 @@ class Controller(QObject):
         self.setup_connections()
         self.serial_thread = None  # 存储单个串口通信线程
         self.data_queue = queue.Queue()  # 用于存储接收到的数据
+        self.one_key_config_running = False  # 用于跟踪一次配置过程是否正在运行
 
     def setup_connections(self):
         # 这里可以设置用户交互的连接，例如按钮点击事件
@@ -339,12 +349,14 @@ class Controller(QObject):
             self.view.write_to_statusbar(f'成功打开串口 {self.model.serial.port}')
             self.view.append_to_output_widget(f'成功打开串口 {self.model.serial.port}', self.view.LOG_TYPE_INFO)
             self.view.append_to_log_edit('打开串口', None, None, None)
+            self.view.enable_operation_buttons()
         else:
             logger.error('无法打开串口 %s', port_name)
             self.view.ui.connectButton.setText(View.BTN_CONNECT)
             self.view.write_to_statusbar(f'无法打开串口 {port_name}', True)
             # 串口断开后，设置下拉框可编辑
             self.view.ui.serialBox.setEnabled(True)
+            self.view.enable_operation_buttons()
 
     def handle_serial_closed(self, close_status, port:str):
         '''
@@ -362,15 +374,7 @@ class Controller(QObject):
             logger.info('串口 %s 已断开', port_name)
             # 串口断开后，设置下拉框可编辑
             self.view.ui.serialBox.setEnabled(True)
-
-    def handle_received_sw_version(self, version):
-        if version !=SerialCommunicationThread.EMIT_STR_ERROR:
-            self.view.ui.swVerLabel.setText(version)
-            self.view.append_to_output_widget(f'软件版本号 {version}', self.view.LOG_TYPE_DATA)
-            self.view.change_label_text(self.view.ui.swVerLabel, version)
-        else:
-            self.view.ui.swVerLabel.setText('获取软件版本号失败')
-            self.view.append_to_output_widget('获取软件版本号失败', self.view.LOG_TYPE_ERROR)
+            self.view.enable_operation_buttons()
 
     def get_software_version(self):
         '''
@@ -380,9 +384,20 @@ class Controller(QObject):
         if self.serial_thread and self.serial_thread.isRunning():
             self.view.append_to_output_widget(self.view.ui.getSwVerButton.text(), self.view.LOG_TYPE_INFO)
             self.serial_thread.get_software_version()
+            self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
+
+    def handle_received_sw_version(self, version):
+        if version !=SerialCommunicationThread.EMIT_STR_ERROR:
+            self.view.ui.swVerLabel.setText(version)
+            self.view.append_to_output_widget(f'软件版本号 {version}', self.view.LOG_TYPE_DATA)
+            self.view.change_label_text(self.view.ui.swVerLabel, version)
+        else:
+            self.view.ui.swVerLabel.setText('获取软件版本号失败')
+            self.view.append_to_output_widget('获取软件版本号失败', self.view.LOG_TYPE_ERROR)
+        self.view.enable_operation_buttons()
 
     def reset_device(self):
         '''
@@ -392,6 +407,7 @@ class Controller(QObject):
         if self.serial_thread and self.serial_thread.isRunning():
             self.view.append_to_output_widget(self.view.ui.resetButton.text(), self.view.LOG_TYPE_INFO)
             self.serial_thread.reset_device()
+            self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
@@ -405,19 +421,7 @@ class Controller(QObject):
             self.view.append_to_output_widget(f'复位成功', self.view.LOG_TYPE_INFO)
         else:
             self.view.append_to_output_widget(f'复位失败', self.view.LOG_TYPE_ERROR)
-
-    def handle_set_config_result(self, result, message):
-        '''
-        处理配置结果信号
-        :param result: 配置结果，True表示成功，False表示失败
-        '''
-        if result:
-            self.view.append_to_output_widget(f'配置成功', self.view.LOG_TYPE_INFO)
-        else:
-            if message == ConfigParams.PATH_ERROR:
-                self.view.append_to_output_widget(f'配置失败，找不到配置文件{self.serial_thread.toml_path}', self.view.LOG_TYPE_ERROR)
-            else:
-                self.view.append_to_output_widget(f'配置失败，{message}', self.view.LOG_TYPE_ERROR)
+        self.view.enable_operation_buttons()
 
     def check_config_file(self):
         '''
@@ -439,8 +443,46 @@ class Controller(QObject):
             return
         toml_path=self.view.config_path
         if self.serial_thread and self.serial_thread.isRunning():
+            # 先断开旧信号连接
+            try:
+                self.serial_thread.set_config_result_signal.disconnect()
+            except Exception:
+                pass    
+            # 重新连接信号
+            self.serial_thread.set_config_result_signal.connect(self.handle_set_config_result)
+        
             self.view.append_to_output_widget(self.view.ui.setConfigButton.text(), self.view.LOG_TYPE_INFO)
             self.serial_thread.set_config_device(toml_path)
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def handle_set_config_result(self, result, message):
+        '''
+        处理配置结果信号
+        :param result: 配置结果，True表示成功，False表示失败
+        '''
+        if result:
+            self.view.append_to_output_widget(f'配置成功', self.view.LOG_TYPE_INFO)
+            if not self.one_key_config_running:  # 检查是否正在进行一次配置
+                self.view.enable_operation_buttons()
+        else:
+            if message == ConfigParams.PATH_ERROR:
+                self.view.append_to_output_widget(f'配置失败，找不到配置文件{self.serial_thread.toml_path}', self.view.LOG_TYPE_ERROR)
+            else:
+                self.view.append_to_output_widget(f'配置失败，{message}', self.view.LOG_TYPE_ERROR)
+            self.view.enable_operation_buttons()
+
+    def read_config_device(self):
+        '''
+        读取设备配置
+        '''
+        logger.info('点击读取配置按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.getConfigButton.text(), self.view.LOG_TYPE_INFO)
+            self.serial_thread.read_config_device()
+            self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
@@ -456,18 +498,8 @@ class Controller(QObject):
             self.view.append_to_output_widget(f'配置信息\n{result}', self.view.LOG_TYPE_DATA)
         else:
             self.view.append_to_output_widget(f'读取配置失败, {message}', self.view.LOG_TYPE_ERROR)
-
-    def read_config_device(self):
-        '''
-        读取设备配置
-        '''
-        logger.info('点击读取配置按钮')
-        if self.serial_thread and self.serial_thread.isRunning():
-            self.view.append_to_output_widget(self.view.ui.getConfigButton.text(), self.view.LOG_TYPE_INFO)
-            self.serial_thread.read_config_device()
-        else:
-            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
-            logger.error('串口未打开')
+        self.one_key_config_running = False
+        self.view.enable_operation_buttons()
 
     def one_key_config(self):
         '''
@@ -478,20 +510,28 @@ class Controller(QObject):
         if not check_config_file_result:
             return
         if self.serial_thread and self.serial_thread.isRunning():
+            self.one_key_config_running = True
+            self.view.disable_operation_buttons()
+
             self.view.append_to_output_widget(self.view.ui.oneKeyButton.text(), self.view.LOG_TYPE_INFO)
             
-            # 使用嵌套回调保证顺序
             def after_config(result, message):
                 if result:
                     self.serial_thread.read_config_device()
+                else:
+                    self.one_key_config_running = False
+                # 处理完成后断开信号连接
+                self.serial_thread.set_config_result_signal.disconnect(after_config_wrapper)
+
+        
+            # 包装器函数用于参数匹配
+            after_config_wrapper = lambda result, message: after_config(result, message)
             
-            def after_reset(result, message):
-                if result:
-                    self.serial_thread.set_config_device(self.view.config_path)
-                    self.serial_thread.set_config_result_signal.connect(after_config)
-            
-            self.serial_thread.get_software_version()
-            self.serial_thread.reset_result_signal.connect(after_reset)
+            # 连接信号到中间层
+            self.serial_thread.set_config_result_signal.connect(after_config_wrapper)
+      
+            # 开始配置流程
+            self.serial_thread.set_config_device(self.view.config_path)
             # self.serial_thread.get_software_version()
             # self.serial_thread.set_config_device(self.view.config_path)
             # self.serial_thread.read_config_device()
@@ -507,6 +547,7 @@ class Controller(QObject):
         if self.serial_thread and self.serial_thread.isRunning():
             self.view.append_to_output_widget(self.view.ui.getKeyStatusButton.text(), self.view.LOG_TYPE_INFO)
             self.serial_thread.get_key_status()
+            self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
@@ -554,6 +595,7 @@ class Controller(QObject):
 
         else:
             self.view.append_to_output_widget(f'获取密钥状态失败, {message}', self.view.LOG_TYPE_ERROR)
+        self.view.enable_operation_buttons()
 
     def handle_received_data(self, log_message, type=View.LOG_RECEIVE, decode=View.ASCII):
         '''
