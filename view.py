@@ -2,11 +2,16 @@
 view 类
 '''
 import ctypes
+import shutil
+import glob
+from collections import deque
 import logging
 import os
-from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics
+import re
+from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics, QTextDocument
 from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem, QFileDialog, QTextEdit, QApplication, QVBoxLayout, QWidget
 from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot, QTimer
+
 
 
 from panel.basic_main_window_ui import Ui_MainWindow
@@ -58,6 +63,11 @@ class MyComboBox(QComboBox):
         QComboBox.showPopup(self)   # 弹出选项框  
 
 class MyTextEdit(QTextEdit):
+    MAX_LOG_ITEMS = 1000  # 内存缓冲区
+    # MAX_LOG_ITEMS = 10  # 内存缓冲区
+    MAX_TEMP_FILES = 50      # 最多保留5个临时文件
+    MAX_TEMP_SIZE = 10 * 1024 * 1024  # 10MB
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
@@ -65,7 +75,14 @@ class MyTextEdit(QTextEdit):
         self._message_queue = []  # 消息队列
         self._processing = False  # 处理状态标志
         self._lock = False  # 简单锁机制
+        self.plain_text_buffer = deque(maxlen=self.MAX_LOG_ITEMS)  # 改用deque提高性能
+        self._temp_file_index = 0
+        self._current_temp_size = 0
 
+    def outer(self):
+        """获取父级View对象"""
+        return self.parent()
+    
     def append_text(self, text):
         # 将消息加入队列
         self._message_queue.append(text)
@@ -96,17 +113,102 @@ class MyTextEdit(QTextEdit):
     def _safe_append(self, text):
         """线程安全的追加文本方法"""
         logger.debug("执行_safe_append方法，文本长度: %d", len(text))
+        # print(text)
         current_value = self.scrollbar.value()
         max_value = self.scrollbar.maximum()
         is_at_bottom = current_value >= max_value - 4
         
-        # 实际插入文本
-        super().insertPlainText(f'\n{text}' if not self.document().isEmpty() else text)
         
+        def replace_non_tag_space(match):
+            # 将连续空格转换为多个&nbsp; 并保留换行
+            replaced = match.group(0)
+            replaced = re.sub(r'  +', lambda m: '&nbsp;' * len(m.group()), replaced)  # 多个空格替换
+            replaced = replaced.replace('\r\n', '<br>')
+            replaced = replaced.replace('\n', '<br>')
+            replaced = replaced.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+            return replaced
+    # 处理HTML内容（保留标签内的原始空格）
+        html_text = f'<br>{text}' if not self.document().isEmpty() else text
+        html_text = re.sub(r'(?<=>)([^<]+)(?=<|$)', replace_non_tag_space, html_text)
+        super().insertHtml(html_text)
+        # print(html_text)
+        # super().insertPlainText(f'\n{text}' if not self.document().isEmpty() else text)
+
         # 处理滚动逻辑
         new_max_value = self.scrollbar.maximum()
         if is_at_bottom:
             self.scrollbar.setValue(new_max_value)
+
+        # 保存纯文本时转换HTML换行标签为换行符
+        plain_str = html_text.replace('<br>', '\n')  # 先转换换行标签
+        plain_str = re.sub(r'<[^>]+>', '', plain_str)  # 后过滤其他标签
+        
+        # 处理其他HTML实体
+        plain_str = plain_str.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t') \
+                            .replace('&nbsp;', ' ') \
+                            .replace('&emsp;', '\t') \
+                            .replace('&gt;', '>') \
+                            .replace('&lt;', '<')
+        
+        # 修改缓冲区处理逻辑
+        if len(self.plain_text_buffer) >= self.plain_text_buffer.maxlen:
+            # 缓冲区满时写入临时文件并清空
+            self._save_to_temp('\n'.join(self.plain_text_buffer))
+            self.plain_text_buffer.clear()
+        self.plain_text_buffer.append(plain_str)
+
+    @Slot(str)
+    def _save_to_temp(self, text):
+        """将溢出数据写入临时文件"""
+        temp_dir = exe_absolute_path("temp_logs")
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # 创建或追加临时文件
+        temp_file = os.path.join(temp_dir, f"log_temp_{self._temp_file_index}.log")
+        with open(temp_file, 'a', encoding='utf-8') as f:
+            f.write(text + '\n')
+            
+        self._current_temp_size += len(text)
+        
+        # 切换文件条件
+        if self._current_temp_size >= self.MAX_TEMP_SIZE:
+            self._temp_file_index = (self._temp_file_index + 1) % self.MAX_TEMP_FILES
+            self._current_temp_size = 0
+
+    def get_full_log(self):
+        """合并内存和临时文件的日志内容"""
+        temp_dir = exe_absolute_path("temp_logs")
+        all_lines = []
+        
+        # 读取所有临时文件（按创建时间正序）
+        temp_files = sorted(glob.glob(os.path.join(temp_dir, "log_temp_*.log")),
+                          key=os.path.getctime)  # 改为按文件创建时间排序
+        
+        for f in temp_files:  # 按时间顺序读取
+            try:
+                with open(f, 'r', encoding='utf-8') as tf:
+                    all_lines.extend(tf.readlines())
+            except Exception as e:
+                logger.error(f"读取临时文件失败: {e}")
+        
+        # 添加内存中的最新日志（追加到文件内容之后）
+        all_lines.extend(self.plain_text_buffer)
+        
+        # 返回所有数据
+        return ''.join(all_lines)
+
+    def clear(self):
+        super().clear()
+        self.plain_text_buffer.clear()
+        self._clean_temp_files()
+
+    def _clean_temp_files(self):
+        """清理所有临时日志文件"""
+        temp_dir = exe_absolute_path("temp_logs")
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)  # 递归删除目录
+            os.makedirs(temp_dir)    # 重建空目录
+
 
 
 class View(QMainWindow):
@@ -362,12 +464,13 @@ class View(QMainWindow):
         else:
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
+        time_style = f'color: {self.COLOR_GRAY};'  # 浅灰色时间样式
         if type and decode:
             # 添加方向箭头符号  
-            direction = ' >>' if type == self.LOG_SEND else ' <<'
-            log_message = f'{current_time} - {decode} - {type}{direction}\n{message}'
+            direction = ' &gt;&gt;' if type == self.LOG_SEND else ' &lt;&lt;'
+            log_message = f'<span style="{time_style}">{current_time}</span> - {decode} - {type}{direction}\n{message}'
         else:
-            log_message = f'{current_time} - {message}'
+            log_message = f'<span style="{time_style}">{current_time}</span> - {message}'
 
         # 使用信号槽机制确保线程安全
         self.ui.logEdit.append_text(f'{log_message}')
@@ -425,7 +528,8 @@ class View(QMainWindow):
         '''
         
         # 获取日志内容
-        log_content = self.ui.logEdit.toPlainText()
+        # log_content = self.ui.logEdit.toPlainText()
+        log_content = self.ui.logEdit.get_full_log()
         if not log_content:
             self.write_to_statusbar('没有日志内容可保存', True)
             return
@@ -492,7 +596,8 @@ class View(QMainWindow):
             self.save_last_config()
             self.controller.cleanup()
             logger.debug('Controller ID in SerialView: %s', id(self.controller))
-            logger.debug('程序退出')
+            self.ui.logEdit._clean_temp_files()  # 清理临时日志文件
+            logger.debug('程序退出，临时文件已清理')
         except Exception as e:
             logger.error('关闭事件处理时发生错误: %s', e)
         event.accept()

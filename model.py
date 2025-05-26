@@ -20,7 +20,7 @@ class SerialModel:
         self.last_receive_time = time.time()  # 初始化时间戳
         self.serial = SerialOperator()  # 只保留一个串口操作对象
         self.data_buffer = bytearray()  # 添加数据缓冲区
-        self.receive_buffer = bytearray()  # 接收数据缓冲区
+        self.receive_buffer = []  # 接收数据缓冲区
         self.log_buffer = bytearray()  # 独立日志缓冲区，用于显示串口log
         self.buffer_lock = threading.Lock()  # 缓冲区锁
         self.sent_buffer = []  # 已发送指令缓冲区
@@ -85,7 +85,12 @@ class SerialModel:
                 # 解析成功，移除已解析的数据
                 parsed_length = serial_message.data_length
                 with self.buffer_lock:
-                    self.receive_buffer = self.data_buffer[:parsed_length]
+                    
+                    self.receive_buffer.append({
+                        'data': self.data_buffer[:parsed_length],
+                        'timestamp': self.last_receive_time  # 时间戳
+                    })
+                    # self.receive_buffer = self.data_buffer[:parsed_length]
                     self.data_buffer = self.data_buffer[parsed_length:]
                 logger.debug('解析结果serial_message：%s', serial_message)
                 return serial_message  # 返回解析后的数据用于后续处理
@@ -155,7 +160,8 @@ class SerialModel:
     def get_received_data(self):
         """获取并清空接收数据缓冲区"""
         with self.buffer_lock:
-            received_data = bytes(self.receive_buffer)
+            # received_data = bytes(self.receive_buffer)
+            received_data = self.receive_buffer.copy()
             self.receive_buffer.clear()
         return received_data
     
@@ -171,11 +177,11 @@ class SerialModel:
         try:
             timeout = 1
             max_retries = 3
-            with self.buffer_lock:
-                self.data_buffer.clear()  # 发送前清空数据缓冲区
             # 使用 SerialMessage 生成要发送的数据
             if serial_message is not None:
                 for retry_count in range(max_retries):
+                    with self.buffer_lock:
+                        self.data_buffer.clear()  # 发送前清空数据缓冲区
                     logger.info('开始第 %d 次请求，准备发送数据：%s', retry_count + 1, serial_message.full_data)
                     self.serial.send_data(serial_message.full_data)
                     start_time = time.time()

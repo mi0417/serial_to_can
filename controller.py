@@ -3,7 +3,7 @@ import time
 import logging
 import queue
 import serial
-from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable
+from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable, QTimer
 
 from model import SerialModel
 from view import View
@@ -56,9 +56,21 @@ class SerialCommunicationThread(QThread):
         if result:
             # 串口打开成功，读取软件版本号
             self.get_software_version()
+            dynamic_sleep = 0.01  # 初始间隔
             # 开始接收数据
             while self._running and self.model.is_serial_open():
                 try:
+                    # 处理数据前检查队列深度
+                    queue_depth = self._request_queue.qsize()
+                    
+                    # 动态调整睡眠时间
+                    if queue_depth > 3:
+                        dynamic_sleep = 0.001  # 高负载时快速响应
+                    elif queue_depth > 0:
+                        dynamic_sleep = 0.01   # 中等负载
+                    else:
+                        dynamic_sleep = 0.03   # 空闲时降低CPU占用
+
                     # 请求处理逻辑
                     if not self._is_processing and not self._request_queue.empty():
                         req = self._request_queue.get()
@@ -67,22 +79,23 @@ class SerialCommunicationThread(QThread):
                         # 分离耗时操作到工作线程
                         self.start_async_request(req)  # 异步处理方法
 
+                    receive_data = self.model.get_received_data()
+                    for data in receive_data:
+                        # logger.debug("%s",receive_data)
+                        self.data_received.emit((format_timestamp(data['timestamp']), data['data']), View.LOG_RECEIVE, View.HEX)
+
                     # 获取已发送指令并处理
                     sent_commands = self.model.get_sent_commands()
                     for cmd in sent_commands:
+                        # logger.debug("%s:%s",format_timestamp(cmd['timestamp']), cmd['data'])
                         # hex_data = byte_array_to_hex_string(cmd['data'])
                         # status = f"重试 ({cmd['retry']}/{cmd['max_retries']}) {hex_data}"
                         self.data_received.emit((format_timestamp(cmd['timestamp']), cmd['data']), View.LOG_SEND, View.HEX)
-
-                    receive_data = self.model.get_received_data()
-                    if receive_data:
-                        self.data_received.emit(receive_data, View.LOG_RECEIVE, View.HEX)
                     
                     # 仅在非主动请求时处理常规接收
                     if not self.model.expect_response:
                         # 接收数据（receive_data从串口接收数据，没有这一步log_data获取不到缓冲区数据），根据类型emit，无对应类型则输出信息
                         message = self.model.receive_data()
-                        
                         # 定时获取日志缓冲区（ASCII格式）
                         log_data = self.model.get_realtime_logs()
                         if log_data:
@@ -90,7 +103,7 @@ class SerialCommunicationThread(QThread):
                     # pass
                 except Exception as e:
                     logger.error('Error receiving data from serial: %s', e)
-                time.sleep(0.05)
+                time.sleep(dynamic_sleep)
             if self._running and not self.model.is_serial_open():
                 self.serial_closed_signal.emit(False, self.port_name)  # 发送串口关闭信号
 
@@ -103,7 +116,8 @@ class SerialCommunicationThread(QThread):
             def __init__(self, method, args, callback, outer):
                 super().__init__()
                 self.method = method
-                self.args = args
+                # self.args = args
+                self.args = args if isinstance(args, (list, tuple)) else [args]
                 self.callback = callback
                 self.outer = outer  # 外部类引用
 
@@ -117,9 +131,11 @@ class SerialCommunicationThread(QThread):
                     self.outer._is_processing = False  # 无论成功失败都重置状态
                     self.outer._current_request = None
 
+        worker_args = req.get('args', []) or []  # 确保空值时转为空列表
         worker = RequestWorker(
             req_method, 
-            req.get('args', []), 
+            # req.get('args', []), 
+            worker_args,
             req['callback'],
             self  # 外部类引用
         )
@@ -182,7 +198,7 @@ class SerialCommunicationThread(QThread):
         # 定义复位完成的回调
         def reset_callback(result):
             if result:
-                # 复位成功发起配置请求
+                time.sleep(0.5)
                 self._request_queue.put({
                     'method': 'config_device',
                     'args': [toml_path],
@@ -607,20 +623,17 @@ class Controller(QObject):
         # self.view.log_message(f'接收到数据：{data}', self.view.LOG_TYPE_DATA)
         # 在这里对message进行处理
         log_time = None
-        if type == View.LOG_SEND:
-            log_time, message = log_message
-        else:
-            message = log_message
 
         if decode == View.HEX:
             try:
+                log_time, message = log_message
                 processed_message = byte_array_to_hex_string(message)
             except Exception as e:
                 logger.error(f'Hex编码失败: {e}')
                 processed_message = message
         else:
             try:
-                processed_message = array_to_ascii(message)
+                processed_message = array_to_ascii(log_message)
             except Exception as e:
                 logger.error(f'ASCII编码失败: {e}')
                 processed_message = message
