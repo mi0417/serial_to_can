@@ -9,7 +9,7 @@ from controller import Controller
 
 if __name__ == '__main__':
 
-    # 在程序开始时删除过期日志，如果注释这句不删除过期log需要注意全局log配置
+    # 在程序开始时删除过期日志，如果注释这句不删除过期log需要注意全局log配置的过期时间
     delete_expired_logs()
 
     app = QApplication(sys.argv)

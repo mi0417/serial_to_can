@@ -8,7 +8,7 @@ from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable, QTi
 from model import SerialModel
 from view import View
 
-from utils.data_processor import ConfigParams
+from utils.data_processor import ConfigParams, ValidValues
 from utils.file_utils import exe_absolute_path, is_file_exists
 from utils.common_data_utils import array_to_ascii, byte_array_to_hex_string, format_timestamp
 
@@ -175,7 +175,7 @@ class SerialCommunicationThread(QThread):
         # self.reset_result_signal.emit(result, self.port_name)
         # return result
 
-    def set_config_device(self, toml_path=None):
+    def set_config_device(self, toml_path=None, config_type=ValidValues.CONFIG_TYPE_PRIVATE_KEY):
         '''
         配置设备
         1、复位设备
@@ -198,10 +198,10 @@ class SerialCommunicationThread(QThread):
         # 定义复位完成的回调
         def reset_callback(result):
             if result:
-                time.sleep(0.5)
+                time.sleep(0.5)     # 复位后发送配置延时
                 self._request_queue.put({
                     'method': 'config_device',
-                    'args': [toml_path],
+                    'args': [toml_path, config_type],
                     'callback': config_callback
                 })
             else:
@@ -468,7 +468,7 @@ class Controller(QObject):
             self.serial_thread.set_config_result_signal.connect(self.handle_set_config_result)
         
             self.view.append_to_output_widget(self.view.ui.setConfigButton.text(), self.view.LOG_TYPE_INFO)
-            self.serial_thread.set_config_device(toml_path)
+            self.serial_thread.set_config_device(toml_path, self.view.get_config_type())
             self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
@@ -486,6 +486,10 @@ class Controller(QObject):
         else:
             if message == ConfigParams.PATH_ERROR:
                 self.view.append_to_output_widget(f'配置失败，找不到配置文件{self.serial_thread.toml_path}', self.view.LOG_TYPE_ERROR)
+            elif message == ConfigParams.PARAM_NOT_FOUND_ERROR:
+                self.view.append_to_output_widget(f'配置失败，缺少配置参数', self.view.LOG_TYPE_ERROR)
+            elif message == ConfigParams.CONFIG_PARAMS_ERROR:
+                self.view.append_to_output_widget(f'配置失败，配置参数错误', self.view.LOG_TYPE_ERROR)
             else:
                 self.view.append_to_output_widget(f'配置失败，{message}', self.view.LOG_TYPE_ERROR)
             self.view.enable_operation_buttons()
@@ -547,7 +551,7 @@ class Controller(QObject):
             self.serial_thread.set_config_result_signal.connect(after_config_wrapper)
       
             # 开始配置流程
-            self.serial_thread.set_config_device(self.view.config_path)
+            self.serial_thread.set_config_device(self.view.config_path, self.view.get_config_type())
             # self.serial_thread.get_software_version()
             # self.serial_thread.set_config_device(self.view.config_path)
             # self.serial_thread.read_config_device()

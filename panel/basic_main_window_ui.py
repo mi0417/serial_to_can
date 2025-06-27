@@ -18,9 +18,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QCommandLinkButton,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
-    QStackedWidget, QStatusBar, QTextEdit, QVBoxLayout,
-    QWidget)
+    QMenuBar, QPushButton, QRadioButton, QSizePolicy,
+    QSpacerItem, QStackedWidget, QStatusBar, QTextEdit,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -104,37 +104,73 @@ class Ui_MainWindow(object):
         self.groupBox = QGroupBox(self.configPage)
         self.groupBox.setObjectName(u"groupBox")
         self.groupBox.setMaximumSize(QSize(16777215, 16777215))
-        self.horizontalLayout_2 = QHBoxLayout(self.groupBox)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.getSwVerButton = QPushButton(self.groupBox)
+        self.verticalLayout_5 = QVBoxLayout(self.groupBox)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.widget_3 = QWidget(self.groupBox)
+        self.widget_3.setObjectName(u"widget_3")
+        self.horizontalLayout_5 = QHBoxLayout(self.widget_3)
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.getSwVerButton = QPushButton(self.widget_3)
         self.getSwVerButton.setObjectName(u"getSwVerButton")
 
-        self.horizontalLayout_2.addWidget(self.getSwVerButton)
+        self.horizontalLayout_5.addWidget(self.getSwVerButton)
 
-        self.resetButton = QPushButton(self.groupBox)
+        self.resetButton = QPushButton(self.widget_3)
         self.resetButton.setObjectName(u"resetButton")
 
-        self.horizontalLayout_2.addWidget(self.resetButton)
+        self.horizontalLayout_5.addWidget(self.resetButton)
 
-        self.setConfigButton = QPushButton(self.groupBox)
+        self.setConfigButton = QPushButton(self.widget_3)
         self.setConfigButton.setObjectName(u"setConfigButton")
         self.setConfigButton.setMouseTracking(False)
 
-        self.horizontalLayout_2.addWidget(self.setConfigButton)
+        self.horizontalLayout_5.addWidget(self.setConfigButton)
 
-        self.getConfigButton = QPushButton(self.groupBox)
+        self.getConfigButton = QPushButton(self.widget_3)
         self.getConfigButton.setObjectName(u"getConfigButton")
 
-        self.horizontalLayout_2.addWidget(self.getConfigButton)
+        self.horizontalLayout_5.addWidget(self.getConfigButton)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer)
+        self.horizontalLayout_5.addItem(self.horizontalSpacer)
 
-        self.oneKeyButton = QPushButton(self.groupBox)
+        self.oneKeyButton = QPushButton(self.widget_3)
         self.oneKeyButton.setObjectName(u"oneKeyButton")
 
-        self.horizontalLayout_2.addWidget(self.oneKeyButton)
+        self.horizontalLayout_5.addWidget(self.oneKeyButton)
+
+
+        self.verticalLayout_5.addWidget(self.widget_3)
+
+        self.widget_4 = QWidget(self.groupBox)
+        self.widget_4.setObjectName(u"widget_4")
+        self.horizontalLayout_2 = QHBoxLayout(self.widget_4)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.configTypeLabel = QLabel(self.widget_4)
+        self.configTypeLabel.setObjectName(u"configTypeLabel")
+
+        self.horizontalLayout_2.addWidget(self.configTypeLabel)
+
+        self.keyRadioButton = QRadioButton(self.widget_4)
+        self.keyRadioButton.setObjectName(u"keyRadioButton")
+        self.keyRadioButton.setChecked(True)
+
+        self.horizontalLayout_2.addWidget(self.keyRadioButton)
+
+        self.qiRadioButton = QRadioButton(self.widget_4)
+        self.qiRadioButton.setObjectName(u"qiRadioButton")
+
+        self.horizontalLayout_2.addWidget(self.qiRadioButton)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
+
+
+        self.verticalLayout_5.addWidget(self.widget_4)
 
 
         self.verticalLayout_2.addWidget(self.groupBox)
@@ -390,6 +426,9 @@ class Ui_MainWindow(object):
         self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
 #endif // QT_CONFIG(tooltip)
         self.oneKeyButton.setText(QCoreApplication.translate("MainWindow", u"\u4e00\u952e\u914d\u7f6e", None))
+        self.configTypeLabel.setText(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u7c7b\u578b", None))
+        self.keyRadioButton.setText(QCoreApplication.translate("MainWindow", u"\u79c1\u6709\u534f\u8bae\u5bc6\u94a5\u4e0b\u8f7d", None))
+        self.qiRadioButton.setText(QCoreApplication.translate("MainWindow", u"Qi\u8bc1\u4e66\u4e0b\u8f7d", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c", None))
         self.getKeyStatusButton.setText(QCoreApplication.translate("MainWindow", u"\u83b7\u53d6\u5bc6\u94a5\u72b6\u6001", None))
         self.honorLabel.setText(QCoreApplication.translate("MainWindow", u"\u8363\u8000", None))

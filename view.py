@@ -8,23 +8,35 @@ from collections import deque
 import logging
 import os
 import re
-from PySide6.QtGui import QColor, QIcon, QFont, QFontMetrics, QTextDocument
-from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem, QFileDialog, QTextEdit, QApplication, QVBoxLayout, QWidget
+import json
+from datetime import datetime
+from PySide6.QtGui import QColor, QIcon, QFontMetrics
+from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QListWidgetItem, QFileDialog, QTextEdit
 from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot, QTimer
-
-
 
 from panel.basic_main_window_ui import Ui_MainWindow
 
 from utils.serial_handle import SerialOperator
 from utils.file_utils import exe_absolute_path
-from datetime import datetime
+from utils.data_processor import ValidValues
 
 logger = logging.getLogger(__name__)
 class MyComboBox(QComboBox):
+    '''
+    自定义下拉列表框
+    '''
 
     def __init__(self, parent = None):
         super(MyComboBox,self).__init__(parent) #调用父类初始化方法
+        self.available_ports = []
+        self.refresh_ports()  # 新增初始化时主动刷新
+
+    def refresh_ports(self):
+        """主动刷新可用串口列表"""
+        self.clear()
+        self.available_ports = SerialOperator().list_available_ports(True)
+        self.addItems(self.available_ports)
+        logger.info('初始化可用串口:%s', self.available_ports)
 
     # 重写showPopup函数
     def showPopup(self):  
@@ -35,15 +47,15 @@ class MyComboBox(QComboBox):
         # 先清空原有的选项
         self.clear()
         # 初始化串口列表
-        available_ports = SerialOperator().list_available_ports(True)
-        logger.info('可用串口:%s', available_ports)
+        self.available_ports = SerialOperator().list_available_ports(True)
+        logger.info('可用串口:%s', self.available_ports)
         # 计算滚动条宽度
         scrollbar_width = self.view().verticalScrollBar().sizeHint().width()
         # 计算视图的内边距
         view_margins = self.view().contentsMargins()
         total_margin_width = view_margins.left() + view_margins.right()
         max_width = 0
-        for port in available_ports:
+        for port in self.available_ports:
             self.addItem(port)
 
             # width = font_metrics.horizontalAdvance (port) + 30
@@ -63,6 +75,9 @@ class MyComboBox(QComboBox):
         QComboBox.showPopup(self)   # 弹出选项框  
 
 class MyTextEdit(QTextEdit):
+    '''
+    自定义文本框
+    '''
     MAX_LOG_ITEMS = 1000  # 内存缓冲区
     # MAX_LOG_ITEMS = 10  # 内存缓冲区
     MAX_TEMP_FILES = 50      # 最多保留5个临时文件
@@ -210,8 +225,11 @@ class MyTextEdit(QTextEdit):
             os.makedirs(temp_dir)    # 重建空目录
 
 
-
 class View(QMainWindow):
+    '''
+    主窗口类
+    '''
+
     # view 颜色
     COLOR_GREEN = '#00FF00'
     COLOR_RED = '#FF0000'
@@ -342,6 +360,18 @@ class View(QMainWindow):
         if selected_input:
             logger.debug('Selected %s: %d - %s', combobox.objectName(), selected_index, selected_input)
 
+    def get_config_type(self):
+        '''获取页面选择的配置类型'''
+        if self.ui.keyRadioButton.isChecked():
+            return ValidValues.CONFIG_TYPE_PRIVATE_KEY
+        return ValidValues.CONFIG_TYPE_QI_CERT
+
+    def set_config_type(self, protocol_type):
+        if protocol_type == ValidValues.CONFIG_TYPE_QI_CERT:
+            self.ui.qiRadioButton.setChecked(True)
+        else:  # 默认选中私有密钥配置
+            self.ui.keyRadioButton.setChecked(True)
+
     def disable_operation_buttons(self):
         """禁用所有功能操作按钮"""
         self.ui.getSwVerButton.setEnabled(False)
@@ -350,6 +380,8 @@ class View(QMainWindow):
         self.ui.getConfigButton.setEnabled(False)
         self.ui.oneKeyButton.setEnabled(False)
         self.ui.getKeyStatusButton.setEnabled(False)
+        self.ui.qiRadioButton.setEnabled(False)
+        self.ui.keyRadioButton.setEnabled(False)
 
     def enable_operation_buttons(self):
         """启用所有功能操作按钮""" 
@@ -359,6 +391,8 @@ class View(QMainWindow):
         self.ui.getConfigButton.setEnabled(True)
         self.ui.oneKeyButton.setEnabled(True)
         self.ui.getKeyStatusButton.setEnabled(True)
+        self.ui.qiRadioButton.setEnabled(True)
+        self.ui.keyRadioButton.setEnabled(True)
 
     def handle_change_page(self):
         """处理页面切换按钮点击事件"""
@@ -572,11 +606,40 @@ class View(QMainWindow):
         if os.path.exists(config_file):
             try:
                 with open(config_file, 'r') as f:
-                    self.config_path = f.read().strip()
+                    content = f.read().strip()
+
+                    # 尝试解析为JSON格式（新版本格式）
+                    try:
+                        config_data = json.loads(content)
+                        self.config_path = config_data.get('path')
+                        saved_port = config_data.get('serial_port', '')
+                        config_type = config_data.get('config_type', ValidValues.CONFIG_TYPE_PRIVATE_KEY)
+                    except json.JSONDecodeError:
+                        # 旧版本格式：纯路径字符串
+                        self.config_path = content
+                        saved_port = ''
+                        config_type = ValidValues.CONFIG_TYPE_PRIVATE_KEY  # 旧版本默认KEY
+                    
+                    # 设置UI状态
+                    logger.info('加载配置路径: %s，协议类型: %s', self.config_path, config_type)
                     if self.config_path:
                         self.ui.configFilePathEdit.setText(self.config_path)
-                        logger.info('加载配置路径: %s', self.config_path)
+                        self.set_config_type(config_type)
                         self.handle_input_config()
+
+                    # 检查并设置串口
+                    if saved_port:
+                        available_ports = SerialOperator().list_available_ports(False)
+                        # 检查端口是否存在（带#号的完整名称匹配）
+                        current_items = [self.ui.serialBox.itemText(i) for i in range(self.ui.serialBox.count())]
+                        port_exists = any(saved_port in item for item in current_items)
+                        
+                        if port_exists:
+                            index = self.ui.serialBox.findText(saved_port, Qt.MatchFlag.MatchContains)
+                            self.ui.serialBox.setCurrentIndex(index)
+                        else:
+                            self.ui.serialBox.setCurrentIndex(-1)  # 清空选择
+                            logger.info('保存的串口 %s 不存在', saved_port)
             except Exception as e:
                 logger.error('加载历史配置失败: %s', e)
 
@@ -584,10 +647,16 @@ class View(QMainWindow):
         """保存当前配置文件路径"""
         config_file = exe_absolute_path('last_config.ini')
         try:
+            current_port = self.ui.serialBox.currentText().split(' #')[0]  # 获取当前选择的串口
             with open(config_file, 'w') as f:
-                if self.config_path:
-                    f.write(self.config_path)
-                    logger.info('保存配置路径: %s', self.config_path)
+                config_data = {
+                    'path': self.config_path,
+                    'serial_port': current_port,
+                    'config_type': self.get_config_type()
+                }
+                json.dump(config_data, f)
+                # f.write(self.config_path)
+                logger.info('保存配置路径: %s', self.config_path)
         except Exception as e:
             logger.error('保存配置路径失败: %s', e)
 
