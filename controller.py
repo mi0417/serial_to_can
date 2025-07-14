@@ -6,7 +6,7 @@ import serial
 from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable, QTimer
 
 from model import SerialModel
-from view import View
+from view.view import View
 
 from utils.data_processor import ConfigParams, ValidValues
 from utils.file_utils import exe_absolute_path, is_file_exists
@@ -175,7 +175,7 @@ class SerialCommunicationThread(QThread):
         # self.reset_result_signal.emit(result, self.port_name)
         # return result
 
-    def set_config_device(self, toml_path=None, config_type=ValidValues.CONFIG_TYPE_PRIVATE_KEY):
+    def set_config_device(self, toml_path=None):
         '''
         配置设备
         1、复位设备
@@ -201,7 +201,7 @@ class SerialCommunicationThread(QThread):
                 time.sleep(0.5)     # 复位后发送配置延时
                 self._request_queue.put({
                     'method': 'config_device',
-                    'args': [toml_path, config_type],
+                    'args': [toml_path],
                     'callback': config_callback
                 })
             else:
@@ -468,7 +468,7 @@ class Controller(QObject):
             self.serial_thread.set_config_result_signal.connect(self.handle_set_config_result)
         
             self.view.append_to_output_widget(self.view.ui.setConfigButton.text(), self.view.LOG_TYPE_INFO)
-            self.serial_thread.set_config_device(toml_path, self.view.get_config_type())
+            self.serial_thread.set_config_device(toml_path)
             self.view.disable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
@@ -551,7 +551,7 @@ class Controller(QObject):
             self.serial_thread.set_config_result_signal.connect(after_config_wrapper)
       
             # 开始配置流程
-            self.serial_thread.set_config_device(self.view.config_path, self.view.get_config_type())
+            self.serial_thread.set_config_device(self.view.config_path)
             # self.serial_thread.get_software_version()
             # self.serial_thread.set_config_device(self.view.config_path)
             # self.serial_thread.read_config_device()
@@ -587,7 +587,8 @@ class Controller(QObject):
                     (self.view.ui.oppoKeyStatus, self.view.ui.oppoFastChargeStatus),
                     (self.view.ui.vivoKeyStatus, self.view.ui.vivoFastChargeStatus),
                     (self.view.ui.huaweiKeyStatus, self.view.ui.huaweiFastChargeStatus),
-                    (self.view.ui.honorKeyStatus, self.view.ui.honorFastChargeStatus)
+                    (self.view.ui.honorKeyStatus, self.view.ui.honorFastChargeStatus),
+                    (self.view.ui.QiCertStatus, None)
                 ]
 
                 # 检查 key_status_list 和 device_labels 长度是否一致
@@ -600,9 +601,10 @@ class Controller(QObject):
                     download_color = None if download_status else View.COLOR_RED
                     self.view.change_label_text(key_label, download_text, download_color)
 
-                    charge_text = '开启' if enable_status else '未开启'
-                    charge_color = None if enable_status else View.COLOR_RED
-                    self.view.change_label_text(charge_label, charge_text, charge_color)
+                    if charge_label:
+                        charge_text = '开启' if enable_status else '未开启'
+                        charge_color = None if enable_status else View.COLOR_RED
+                        self.view.change_label_text(charge_label, charge_text, charge_color)
 
             except ValueError as ve:
                 # 处理列表长度不一致的错误

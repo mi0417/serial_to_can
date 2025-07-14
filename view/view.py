@@ -15,9 +15,10 @@ from PySide6.QtWidgets import QMainWindow, QLabel, QComboBox, QPushButton, QList
 from PySide6.QtCore import Qt, QSize, QMetaObject, Q_ARG, Slot, QTimer
 
 from panel.basic_main_window_ui import Ui_MainWindow
+from .config_edit import ConfigEditWindow
 
 from utils.serial_handle import SerialOperator
-from utils.file_utils import exe_absolute_path
+from utils.file_utils import exe_absolute_path, read_file
 from utils.data_processor import ValidValues
 
 logger = logging.getLogger(__name__)
@@ -224,7 +225,6 @@ class MyTextEdit(QTextEdit):
             shutil.rmtree(temp_dir)  # 递归删除目录
             os.makedirs(temp_dir)    # 重建空目录
 
-
 class View(QMainWindow):
     '''
     主窗口类
@@ -249,6 +249,7 @@ class View(QMainWindow):
     LOG_TYPE_INFO = 0
     LOG_TYPE_DATA = 1
     LOG_TYPE_ERROR = 2
+    LOG_TYPE_WARNING = 3
 
     LOG_RECEIVE = 'receive'
     LOG_SEND = 'send'
@@ -257,7 +258,7 @@ class View(QMainWindow):
     HEX = 'Hex'
 
     MAX_LOG_ITEMS = 500  # 设定最大日志项数
-    def __init__(self, icon_path = None, window_title = None):
+    def __init__(self, icon_path = None, window_title = None, open_config_edit=False, config_edit_qss=None):
         super().__init__()
         self.controller = None
         self.ui = Ui_MainWindow()
@@ -271,6 +272,10 @@ class View(QMainWindow):
         self.config_path = None
         self.auto_scroll = True
         self.load_last_config()  # 初始化加载
+        self.config_edit_window = None  # 新增属性，用于跟踪 config_edit 窗口
+        self.config_edit_qss = None
+        if config_edit_qss:
+            self.config_edit_qss = config_edit_qss
 
 
     def init_UI(self):
@@ -294,10 +299,16 @@ class View(QMainWindow):
         self.ui.selectConfigBtn.clicked.connect(self.handle_select_config)
         self.ui.clearLogBtn.clicked.connect(self.clear_log)
         self.ui.saveLogBtn.clicked.connect(self.save_log)
-        self.ui.inputConfigBtn.clicked.connect(self.handle_input_config)
         self.ui.scrollBottomBtn.clicked.connect(self.on_scroll_bottom_clicked)
         self.ui.changePageBtn.clicked.connect(self.handle_change_page)
+        self.ui.editConfigBtn.clicked.connect(lambda: self.open_config_edit(self.ui.configFilePathEdit.text()))
         self.update_change_button_text()  # 初始化按钮文本
+
+        # configFilePathEdit手动修改后按回车重新导入
+        self.ui.configFilePathEdit.returnPressed.connect(self.handle_input_config)
+        # 或者使用 editingFinished 信号，输入框失去焦点或按下回车时触发
+        # self.ui.configFilePathEdit.editingFinished.connect(self.handle_input_config)
+
 
 
     def replace_combo_box(self, original_combo:QComboBox, parent):
@@ -351,6 +362,42 @@ class View(QMainWindow):
             original_edit.parent().layout().insertWidget(index, text_edit)
         return text_edit
 
+    def open_config_edit(self, config_file_path = None):
+        """打开 config_edit 界面，多次点击只打开一个"""
+        if not config_file_path:
+            self.append_to_output_widget('配置文件路径为空，打开默认配置编辑界面', self.LOG_TYPE_WARNING)
+
+        if self.config_edit_window is None:
+            # 这里需要根据实际的 config_edit 类进行导入和实例化
+            logger.info('编辑配置文件%s', config_file_path)
+            self.config_edit_window = ConfigEditWindow(config_file_path)
+            self.config_edit_window.destroyed.connect(self.on_config_edit_closed)
+        else:
+            # 更新配置路径并重新加载配置
+            logger.info('编辑配置文件%s', config_file_path)
+            self.config_edit_window.config_file_path = config_file_path
+            self.config_edit_window.load_config_file(config_file_path)
+
+        # 判断 QSS 是否已导入，若未导入则读取并应用样式表
+        if self.config_edit_qss:
+            try:
+                qss_style = read_file(self.config_edit_qss)
+                if qss_style:
+                    self.config_edit_window.setStyleSheet(qss_style)
+                    logger.info("成功应用 config_edit 界面的 QSS 样式表")
+            except Exception as e:
+                logger.error("应用 config_edit 界面 QSS 样式表失败: %s", e)
+
+
+        self.config_edit_window.show()
+        self.config_edit_window.activateWindow()
+        self.config_edit_window.raise_()
+
+    def on_config_edit_closed(self):
+        """处理 config_edit 窗口关闭事件"""
+        logger.info('config_edit 窗口已关闭')
+        self.config_edit_window = None
+
     def show_selected_combobox(self, combobox:QComboBox):
         '''
         显示选择的combobox的内容
@@ -360,18 +407,6 @@ class View(QMainWindow):
         if selected_input:
             logger.debug('Selected %s: %d - %s', combobox.objectName(), selected_index, selected_input)
 
-    def get_config_type(self):
-        '''获取页面选择的配置类型'''
-        if self.ui.keyRadioButton.isChecked():
-            return ValidValues.CONFIG_TYPE_PRIVATE_KEY
-        return ValidValues.CONFIG_TYPE_QI_CERT
-
-    def set_config_type(self, protocol_type):
-        if protocol_type == ValidValues.CONFIG_TYPE_QI_CERT:
-            self.ui.qiRadioButton.setChecked(True)
-        else:  # 默认选中私有密钥配置
-            self.ui.keyRadioButton.setChecked(True)
-
     def disable_operation_buttons(self):
         """禁用所有功能操作按钮"""
         self.ui.getSwVerButton.setEnabled(False)
@@ -380,8 +415,6 @@ class View(QMainWindow):
         self.ui.getConfigButton.setEnabled(False)
         self.ui.oneKeyButton.setEnabled(False)
         self.ui.getKeyStatusButton.setEnabled(False)
-        self.ui.qiRadioButton.setEnabled(False)
-        self.ui.keyRadioButton.setEnabled(False)
 
     def enable_operation_buttons(self):
         """启用所有功能操作按钮""" 
@@ -391,8 +424,6 @@ class View(QMainWindow):
         self.ui.getConfigButton.setEnabled(True)
         self.ui.oneKeyButton.setEnabled(True)
         self.ui.getKeyStatusButton.setEnabled(True)
-        self.ui.qiRadioButton.setEnabled(True)
-        self.ui.keyRadioButton.setEnabled(True)
 
     def handle_change_page(self):
         """处理页面切换按钮点击事件"""
@@ -600,6 +631,7 @@ class View(QMainWindow):
             # 恢复系统默认颜色
             status_bar.setStyleSheet('')
 
+    '''--------------------------------------保存的界面选项开始----------------------------------'''
     def load_last_config(self):
         """加载上次保存的配置文件路径"""
         config_file = exe_absolute_path('last_config.ini')
@@ -613,18 +645,15 @@ class View(QMainWindow):
                         config_data = json.loads(content)
                         self.config_path = config_data.get('path')
                         saved_port = config_data.get('serial_port', '')
-                        config_type = config_data.get('config_type', ValidValues.CONFIG_TYPE_PRIVATE_KEY)
                     except json.JSONDecodeError:
                         # 旧版本格式：纯路径字符串
                         self.config_path = content
                         saved_port = ''
-                        config_type = ValidValues.CONFIG_TYPE_PRIVATE_KEY  # 旧版本默认KEY
                     
                     # 设置UI状态
-                    logger.info('加载配置路径: %s，协议类型: %s', self.config_path, config_type)
+                    logger.info('加载配置路径: %s', self.config_path)
                     if self.config_path:
                         self.ui.configFilePathEdit.setText(self.config_path)
-                        self.set_config_type(config_type)
                         self.handle_input_config()
 
                     # 检查并设置串口
@@ -651,14 +680,15 @@ class View(QMainWindow):
             with open(config_file, 'w') as f:
                 config_data = {
                     'path': self.config_path,
-                    'serial_port': current_port,
-                    'config_type': self.get_config_type()
+                    'serial_port': current_port
                 }
                 json.dump(config_data, f)
                 # f.write(self.config_path)
                 logger.info('保存配置路径: %s', self.config_path)
         except Exception as e:
             logger.error('保存配置路径失败: %s', e)
+
+    '''--------------------------------------保存的界面选项结束----------------------------------'''
 
     def closeEvent(self, event):
         try:

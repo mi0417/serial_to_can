@@ -1,0 +1,1134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>configEditWindow</class>
+ <widget class="QMainWindow" name="configEditWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>550</width>
+    <height>580</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>配置文件编辑</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QWidget" name="widget_4" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="communicatGroupBox">
+         <property name="minimumSize">
+          <size>
+           <width>192</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>通信配置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>通信类型</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="typeComboBox">
+            <property name="currentIndex">
+             <number>1</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>CAN</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CANFD</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>LIN</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Uart</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>波特率</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="baudrateComboBox">
+            <property name="editable">
+             <bool>true</bool>
+            </property>
+            <property name="currentIndex">
+             <number>4</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>125</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>250</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>500</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1000</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2000</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4000</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5000</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8000</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="baudrateUnit">
+            <property name="maximumSize">
+             <size>
+              <width>40</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>K bps</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="diagGroupBox">
+         <property name="title">
+          <string>诊断配置（11-Bit ID）</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="requestIDlineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0x</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>应答ID</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="responseIDlineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0x</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>请求ID</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="qiTransmissionGroupBox">
+         <property name="title">
+          <string>Qi证书透传</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>发送ID</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="qiTransmitIDlineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0x7F0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>接收ID</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="qiReceiveIDlineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0x7F1</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="DIDgroupBox">
+      <property name="title">
+       <string>密钥读写DID</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>获取密钥状态</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="getKeyStatusDIDlineEdit">
+         <property name="text">
+          <string>0x4209</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>读写华为荣耀</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="readWriteKeyDIDlineEdit">
+         <property name="text">
+          <string>0x420A</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>获取Qi密钥状态</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="getQiStatusDIDlineEdit">
+         <property name="text">
+          <string>0x420D</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="NMConfigGroupBox">
+      <property name="minimumSize">
+       <size>
+        <width>420</width>
+        <height>350</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>网络管理报文</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QWidget" name="widget_3" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="nmEnabledCheckBox">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>使能</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>（目前只支持8和64字节）</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QGridLayout" name="gridLayout_4">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="7">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>DLC</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="8">
+           <widget class="QComboBox" name="NMDLCcomboBox">
+            <property name="currentIndex">
+             <number>15</number>
+            </property>
+            <item>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>7</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>9</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>10</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>11</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>12</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>13</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>14</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>15</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>报文ID</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Policy::Maximum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="NMIDlineEdit">
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>0x</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLineEdit" name="NMPeriodLineEdit">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>ms</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="6">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Policy::Maximum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>周期</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="9">
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QWidget" name="widget_2" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="readNMDataLineEdit">
+               <property name="inputMask">
+                <string/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string>复制报文到这里进行识别</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="recognizeNMDataButton">
+               <property name="text">
+                <string>识别报文</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="NMDataTableWidget">
+            <property name="autoScrollMargin">
+             <number>16</number>
+            </property>
+            <attribute name="horizontalHeaderCascadingSectionResizes">
+             <bool>true</bool>
+            </attribute>
+            <attribute name="horizontalHeaderDefaultSectionSize">
+             <number>55</number>
+            </attribute>
+            <attribute name="verticalHeaderDefaultSectionSize">
+             <number>23</number>
+            </attribute>
+            <row>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>8</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>16</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>24</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>32</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>40</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>48</string>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>56</string>
+             </property>
+            </row>
+            <column>
+             <property name="text">
+              <string>0</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>1</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>2</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>3</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>4</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>5</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>6</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>7</string>
+             </property>
+            </column>
+            <item row="0" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="0" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="1" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="2" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="3" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="4" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="5" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="6" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="0">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="1">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="2">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="3">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="4">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="5">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="6">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+            <item row="7" column="7">
+             <property name="text">
+              <string>00</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>550</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>选项</string>
+    </property>
+    <addaction name="importAction"/>
+    <addaction name="separator"/>
+    <addaction name="saveAction"/>
+    <addaction name="saveAsAction"/>
+   </widget>
+   <addaction name="menu"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="importAction">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+   </property>
+   <property name="text">
+    <string>导入...</string>
+   </property>
+  </action>
+  <action name="saveAction">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+   </property>
+   <property name="text">
+    <string>保存</string>
+   </property>
+  </action>
+  <action name="saveAsAction">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
+   </property>
+   <property name="text">
+    <string>另存为</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,30 @@
+/* QTableWidget#NMDataTableWidget::item
+{
+    color:black;
+    background:white; 
+} */
+
+/* QTableWidget#NMDataTableWidget::item::selected
+{
+    color:white;
+    background:#00B0F0; 
+} */
+QTableWidget#NMDataTableWidget::item {
+    background-color: #FFFFFF; /* 正常单元格背景色 */
+    color: #000000; /* 正常单元格文字颜色 */
+    text-align: center;
+    border-radius: 4px; /* 设置圆角半径 */
+    border: 1px solid transparent; /* 设置边框宽度和颜色 */
+}
+QTableWidget#NMDataTableWidget::item:selected {
+    background-color: #0070C0; /* 选中单元格背景色 */
+    color: #FFFFFF; /* 选中单元格文字颜色 */
+    border-radius: 4px; /* 设置选中时的圆角半径 */
+    border: 1px solid transparent; /* 设置选中时的边框宽度和颜色 */
+}
+QTableWidget#NMDataTableWidget::item:disabled {
+    background-color: #DCDCDC; /* 不可编辑单元格背景色 */
+    color: #646464; /* 不可编辑单元格文字颜色 */
+    border-radius: 4px; /* 设置不可编辑时的圆角半径 */
+    border: 1px solid transparent; /* 设置不可编辑时的边框宽度和颜色 */
+}

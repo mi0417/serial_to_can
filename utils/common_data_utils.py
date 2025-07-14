@@ -3,6 +3,7 @@
 '''
 import logging
 import datetime
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ def array_to_ascii(byte_array):
         # 保留换行符和回车符，其他控制字符替换为点
         ascii_str = ''.join(
             c if (ord(c) >= 32 or c in '\n\r\t')
-            else '.' if ord(c) < 128 
+            else '.' if ord(c) < 128  
             else '.' 
             for c in ascii_str
         )
@@ -186,11 +187,11 @@ def hex_to_ascii(hex_str):
         if hex_str.startswith('0x'):
             hex_str = hex_str[2:]
         return bytes.fromhex(hex_str).decode('ascii')
-    except ValueError as e:
-        logger.error('Invalid hex string: %s', e)
-        return None
     except UnicodeDecodeError as e:
         logger.error('Decoding error: %s', e)
+        return None
+    except ValueError as e:
+        logger.error('Invalid hex string: %s', e)
         return None
 
 def ascii_to_hex(ascii_str):
@@ -279,6 +280,26 @@ def byte_array_to_hex_string(byte_array):
     formatted_hex_str = ' '.join(hex_str[i:i+2] for i in range(0, len(hex_str), 2))
     return formatted_hex_str
 
+def byte_array_to_hex_string_with_newline(byte_array):
+    '''
+    将字节数组转换为 XX XX XX 格式的十六进制字符串，
+    若长度超过 8 位，每 8 位添加一个换行符。
+
+    Args:
+        byte_array (bytes): 字节数组
+
+    Returns:
+        str: 格式化后的十六进制字符串
+    '''
+    formatted_hex_str = byte_array_to_hex_string(byte_array)
+    if formatted_hex_str is None:
+        return None
+    
+    parts = []
+    for i in range(0, len(formatted_hex_str), 24):  # 每 8 个十六进制数（包含 7 个空格）长度为 23
+        parts.append(formatted_hex_str[i:i+24])
+    return '\n'.join(parts)
+
 def int_to_fixed_bytes(num, length):
     '''
     将整数转换为固定长度的小端字节数组。
@@ -295,10 +316,197 @@ def int_to_fixed_bytes(num, length):
         byte_array = num.to_bytes(length, byteorder='little')
         return byte_array
     except OverflowError:
-        logger.error(f'整数 {num}（{hex(num)}） 无法用 {length} 字节表示。')
+        logger.error('整数 %d（%s） 无法用 %d 字节表示。', num, hex(num), length)
         return None
     
+def int_to_hex_string(num: int) -> str:
+    """
+    将整数转换为以 0x 开头，后面为大写形式的十六进制字符串。
+
+    :param num: 要转换的整数
+    :return: 转换后的十六进制字符串
+    """
+    hex_str = hex(num)
+    return "0x" + hex_str[2:].upper()
+    
 def format_timestamp(timestamp):
+    """
+    将时间戳转换为格式化的字符串。
+
+    :param timestamp: 时间戳，单位为秒
+    :return: 格式化后的字符串，格式为 'YYYY-MM-DD HH:MM:SS.fff'
+    """
     dt_obj = datetime.datetime.fromtimestamp(timestamp)
     formatted_time = dt_obj.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     return formatted_time
+
+def split_hex_string(input_string):
+    """
+    将输入的字符串拆分为最长 2 位的十六进制数组，若元素只有一位则补零。
+
+    :param input_string: 包含十六进制数字的字符串，数字可能以逗号、空格或其他符号分隔
+    :return: 拆分后的十六进制数组
+    """
+    # 先使用正则表达式提取所有可能的十六进制片段
+    hex_segments = re.findall(r'[0-9a-fA-F]+', input_string)
+    result = []
+    for segment in hex_segments:
+        # 按每 2 个字符分割当前片段
+        for i in range(0, len(segment), 2):
+            hex_part = segment[i:i + 2]
+            # 若长度为 1 则补零
+            if len(hex_part) == 1:
+                hex_part = '0' + hex_part
+            result.append(hex_part)
+    return result
+
+def split_hex_string_to_byte_array(input_string):
+    """
+    将以空格、换行等分隔的包含十六进制数字的字符串转换为字节数组。
+
+    :param input_string: 包含十六进制数字的字符串，数字可能以空格、换行或其他符号分隔
+    :return: 转换后的字节数组，如果输入无效则返回 None
+    """
+    # 先使用正则表达式提取所有可能的十六进制片段
+    hex_segments = re.findall(r'[0-9a-fA-F]+', input_string)
+    hex_str = ""
+    for segment in hex_segments:
+        # 按每 2 个字符分割当前片段
+        for i in range(0, len(segment), 2):
+            hex_part = segment[i:i + 2]
+            # 若长度为 1 则补零
+            if len(hex_part) == 1:
+                hex_part = '0' + hex_part
+            hex_str += hex_part
+    try:
+        # 将组合后的十六进制字符串转换为字节数组
+        return bytes.fromhex(hex_str)
+    except ValueError:
+        logger.error('Invalid hex string: %s', input_string)
+        return None
+
+class CommentParser:
+    """处理Python代码中的注释，支持多行字符串
+    """
+    # # 使用示例
+    # parser = CommentParser()
+    # lines = [
+    #     'def func():\n',
+    #     '    """这是一个文档字符串',
+    #     '    包含#符号但不是注释',
+    #     '    """',
+    #     '    ',
+    #     '    print("# 这也不是注释")  # 这才是注释',
+    #     '# 这是行首注释'
+    # ]
+    # for line in lines:
+    #     leading_whitespace, code, comment = parser.split_code_and_comment_with_whitespace(line)
+    #     print(f"行 {parser.current_line}: 前导='{leading_whitespace}', 代码='{code}', 注释='{comment}', 状态={parser.state}")
+    
+    STATE_SINGLE_QUOTE = 'single_quote'
+    STATE_DOUBLE_QUOTE = 'double_quote'
+    STATE_TRIPLE_SINGLE = 'triple_single'   # 三个单引号
+    STATE_TRIPLE_DOUBLE = 'triple_double'
+
+    def __init__(self):
+        # 解析状态：None, 'single_quote', 'double_quote', 'triple_single', 'triple_double'
+        self.state = None
+        self.current_line = 0
+    
+    def split_code_and_comment_with_whitespace(self, line: str) -> tuple[str, str, str]:
+        """
+        分离单行代码和注释，维护多行状态
+        返回：(代码部分, 注释部分)
+        """
+        self.current_line += 1
+        line = line.rstrip('\n')
+        leading_whitespace = ""
+        content = ""
+        comment = ""
+        
+        # 提取行首的空白字符
+        for char in line:
+            if char in (' ', '\t'):
+                leading_whitespace += char
+            else:
+                break
+        line = line[len(leading_whitespace):]  # 去掉行首空白字符后的剩余内容
+
+        i = 0
+        length = len(line)
+        
+        while i < length:
+            char = line[i]
+            
+            # 检查是否在三引号字符串中结束
+            if self.state in [self.STATE_TRIPLE_SINGLE, self.STATE_TRIPLE_DOUBLE]:
+                quote = "'''" if self.state == self.STATE_TRIPLE_SINGLE else '"""'
+                if i <= length - 3 and line[i:i+3] == quote:
+                    self.state = None
+                    i += 3
+                    continue
+            
+            
+            # 检查是否在单引号/双引号字符串中结束
+            elif self.state in [self.STATE_SINGLE_QUOTE, self.STATE_DOUBLE_QUOTE]:
+                quote_char = "'" if self.state == self.STATE_SINGLE_QUOTE else '"'
+                if char == quote_char:
+                    # 检查是否为转义的引号
+                    escaped = i > 0 and line[i - 1] == '\\'
+                    # 处理奇数个转义字符的情况
+                    escape_count = 0
+                    j = i - 1
+                    while j >= 0 and line[j] == '\\':
+                        escape_count += 1
+                        j -= 1
+                    if escape_count % 2 == 0:  # 偶数个转义字符，说明引号是真正的结束
+                        self.state = None
+                    if not escaped:
+                        i += 1
+                        continue
+            
+            # 当前不在任何字符串中，检查新的字符串或注释
+            if self.state is None:
+                # 检查三引号字符串开始
+                if i <= length - 3 and line[i:i+3] in ['"""', "'''"]:
+                    quote = line[i:i+3]
+                    self.state = self.STATE_TRIPLE_SINGLE if quote == "'''" else self.STATE_TRIPLE_DOUBLE
+                    i += 3
+                    continue
+                
+                # 检查单引号/双引号字符串开始
+                if char in ["'", '"']:
+                    # 检查是否为转义的引号
+                    if i > 0 and line[i - 1] == '\\':
+                        i += 1
+                        continue
+                    self.state = self.STATE_SINGLE_QUOTE if char == "'" else self.STATE_DOUBLE_QUOTE
+                    i += 1
+                    continue
+                
+                # 检查注释
+                if char == '#':
+                    comment_start = i
+                    code_end = comment_start - 1
+                    while code_end >= 0 and line[code_end].isspace():
+                        code_end -= 1
+                    
+                    content = line[:code_end + 1]
+                    comment = line[code_end + 1:]
+                    break
+                
+            i += 1
+        if not content and not comment:
+            content = line
+
+        return leading_whitespace, content, comment
+
+    def split_code_and_comment(self, line: str) -> tuple[str, str]:
+        """
+        分离代码和注释（不含空格）
+        返回：(代码部分, 注释部分)
+        """
+        leading_whitespace, code_part, comment_part = self.split_code_and_comment_with_whitespace(line)
+        # 移除注释前的所有空格
+        comment_part = comment_part.lstrip()
+        return code_part, comment_part

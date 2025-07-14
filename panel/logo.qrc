@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="/">
+    <file>imgs/Luxshare.png</file>
+    <file>imgs/HONOR_30_70.png</file>
+    <file>imgs/huawei_30_70.png</file>
+    <file>imgs/oppo_30_70.png</file>
+    <file>imgs/qi_30_70.png</file>
+    <file>imgs/vivo_30_70.png</file>
+    <file>imgs/xiaomi_30_70.png</file>
+  </qresource>
+</RCC>

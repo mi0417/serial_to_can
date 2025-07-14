@@ -11,6 +11,16 @@ QWidget#keyWidget QLabel {
     /* 设置外边距为 0，让边框之间更紧凑 */
     margin: 0;
     border-radius: 3px;
+    text-align: center;
+}
+
+QWidget#keyWidget QLabel#xiaomiLabel, 
+QWidget#keyWidget QLabel#oppoLabel,
+QWidget#keyWidget QLabel#vivoLabel,
+QWidget#keyWidget QLabel#huaweiLabel,
+QWidget#keyWidget QLabel#honorLabel,
+QWidget#keyWidget QLabel#qiLabel {
+    padding:1px;
 }
 
 QCommandLinkButton#changePageBtn {

@@ -4,3 +4,10 @@ pyside6-uic --o .\panel\basic_main_window_ui.py .\panel\basic_main_window.ui
 pyinstaller --noconfirm --onefile --windowed --icon "D:\project\serial\SerialToCAN\panel\imgs\xjrhf-qqsx8-001.ico" --add-data "D:\project\serial\SerialToCAN\panel\basic_main_window.qss;." --add-data "D:\project\serial\SerialToCAN\panel\imgs\icon (2).png;.\imgs" --distpath "D:\project\serial\SerialToCAN\output"  "D:/project/serial/SerialToCAN/main.py"
 
 pyinstaller --noconfirm --onefile --windowed --name "serial_to_can_setup_temp" --icon "D:\project\serial\SerialToCAN\panel\imgs\xjrhf-qqsx8-001.ico" --add-data "D:\project\serial\SerialToCAN\panel\basic_main_window.qss;." --add-data "D:\project\serial\SerialToCAN\panel\imgs\icon (2).png;.\imgs" --distpath "D:\project\serial\SerialToCAN\output"  "D:/project/serial/SerialToCAN/main.py"
+
+pyinstaller --noconfirm --onefile --windowed --name "serial_to_can_setup_temp" --icon "D:\project\serial\SerialToCAN\panel\imgs\xjrhf-qqsx8-001.ico" --add-data "D:\project\serial\SerialToCAN\panel\basic_main_window.qss;." --add-data "D:\project\serial\SerialToCAN\panel\config_edit.qss;." --add-data "D:\project\serial\SerialToCAN\panel\logo_rc.py;." --add-data "D:\project\serial\SerialToCAN\panel\imgs\config_icon.png;." --add-data "D:\project\serial\SerialToCAN\panel\imgs\icon (2).png;." --distpath "D:\project\serial\SerialToCAN\output"  "D:\project\serial\SerialToCAN\main.py"
+
+pyinstaller serial_to_can_setup_temp.spec
+
+换行
+Alt+Z

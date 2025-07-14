@@ -242,14 +242,14 @@ class SerialModel:
         logger.error('复位失败')
         return False
     
-    def config_device(self, toml_path, config_type=ValidValues.CONFIG_TYPE_PRIVATE_KEY):
+    def config_device(self, toml_path):
         '''
         配置设备
         :param toml_path: toml文件路径
         :return: 配置结果True/False message: 错误信息
         '''
         # 读取toml文件
-        config, result = ConfigParams.from_toml_data(toml_path, config_type)
+        config, result = ConfigParams.from_toml_data(toml_path)
         if result == ConfigParams.NO_ERROR:
             # 发送配置数据
             logger.info('开始配置设备')

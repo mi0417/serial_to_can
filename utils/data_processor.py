@@ -1,14 +1,19 @@
 '''
     业务相关的数据处理
 '''
+import logging
+
 import utils.common_data_utils as utils
 import utils.file_utils as file_utils
 # import common_data_utils as utils
 # import file_utils as file_utils
 
-import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)  
+logger.addHandler(console_handler)
 
 # 定义消息各部分的长度（占字节数）
 HEADER_LENGTH       = 3     # 数据头长度
@@ -17,10 +22,13 @@ COMMAND_LENGTH      = 2     # 命令长度
 DATA_LENGTH_BYTES   = 2     # 数据体长度
 CRC_LENGTH          = 1     # CRC 校验码长度
 END_SYMBOL_LENGTH   = 2     # 结束符长度
-MIN_DATA_LENGTH     = HEADER_LENGTH + DATA_TYPE_LENGTH + COMMAND_LENGTH + DATA_LENGTH_BYTES + CRC_LENGTH + END_SYMBOL_LENGTH   # 数据体最小长度
+MIN_DATA_LENGTH     = HEADER_LENGTH + DATA_TYPE_LENGTH + COMMAND_LENGTH + DATA_LENGTH_BYTES\
+                     + CRC_LENGTH + END_SYMBOL_LENGTH   # 数据体最小长度
 MAX_APP_DATA_LENGTH = 128   # APP业务数据体最大长度
 MAX_OTA_DATA_LENGTH = 4096  # OTA业务数据体最大长度
-KEY_STATUS_MIN_LENGTH = 5   # 密钥状态最小长度,通用did 4209内容长度10个字节, Byte0-4,5字节显示5个密钥状态
+KEY_STATUS_MIN_LENGTH = 10   # 密钥状态最小长度,通用did 4209内容长度10个字节, Byte0-4,5字节显示5个密钥状态, 第10个字节显示qi密钥下载状态
+KEY_STATUS_FAST_CHARGE_LENGTH = 5
+KEY_STATUS_QI_BYTE = 10
 
 class ValidValues:
     '''
@@ -64,11 +72,12 @@ class ValidValues:
     QI_CERTIFICATE_SECTION = 'Qi_certificate'
     QI_TRANSMIT_ID_KEY = 'qi_transmit_id'
     QI_RECEIVE_ID_KEY = 'qi_receive_id'
-    GET_QI_STATUS = 'get_qi_status'
+    GET_QI_STATUS_KEY = 'get_qi_status'
 
     # 定义网络管理配置常量
     NM_CONFIG_SECTION = 'nm_config'
     NM_ENABLED_KEY = 'nm_enabled'
+    NM_DLC_KEY = 'nm_DLC'
     NM_ID_KEY = 'nm_id'
     NM_PERIOD_KEY = 'nm_period'
     NM_MESSAGE_KEY = 'nm_message'
@@ -78,24 +87,34 @@ class ValidValues:
         'CAN': b'\x01',
         'CANFD': b'\x02',
         'LIN': b'\x03',
-        'UART': b'\x04'
-    }  
+        'Uart': b'\x04'
+    }
 
-    CAN_TYPE_MAPPING_REVERSE = {
-        b'\x01': 'CAN',
-        b'\x02': 'CANFD',
-        b'\x03': 'LIN',
-        b'\x04': 'Uart'
-    }  
+    CAN_TYPE_MAPPING_REVERSE = {value: key for key, value in CAN_TYPE_MAPPING.items()}
 
-    # 用于配置类型的传递
-    CONFIG_TYPE_PRIVATE_KEY = 'KEY'     # 配置类型 私有密钥
-    CONFIG_TYPE_QI_CERT = 'QI'          # 配置类型 Qi证书
+    # 提取 CAN 类型列表
+    CAN_TYPES = list(CAN_TYPE_MAPPING.keys())
+    '''0:CAN 1:CANFD 2:LIN 3:UART'''
 
-    # 协议类型
-    PROTOCOL_PRIVATE = b'\x00'  # 私有协议秘钥下载（bit7=0）
-    PROTOCOL_QI = b'\x80'       # Qi证书下载（bit7=1）
+    # 定义 nm_enabled 转换映射
+    NM_ENABLED_MAPPING = {
+        False: {
+            8: b'\x00',
+            15: b'\x00'
+        },
+        True: {
+            8: b'\x01',
+            15: b'\x40'
+        }
+    }
 
+    # 生成反向映射
+    NM_ENABLED_MAPPING_REVERSE = {}
+    for enabled, dlc_dict in NM_ENABLED_MAPPING.items():
+        for dlc, byte_value in dlc_dict.items():
+            NM_ENABLED_MAPPING_REVERSE[byte_value] = (enabled, dlc)
+
+    CAN_DLC_LENGTH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64]
 
 class SerialMessage:
     '''
@@ -282,15 +301,21 @@ class SerialMessage:
             return None, self.DATA_LENGTH_SHORT_ERROR
         
         key_status = []
-        for i in range(0, KEY_STATUS_MIN_LENGTH):  # 只处理前 5 个字节
+        for i in range(0, KEY_STATUS_FAST_CHARGE_LENGTH):  # 只处理前 5 个字节
             byte = self.data[i]
             download_status = (byte & 0x01) == 0x01  # 提取 bit0
             enable_status = (byte & 0x10) == 0x10    # 提取 bit4
             key_status.append((download_status, enable_status))
 
-        return key_status, self.NO_ERROR
-        
+        # 提取第 10 个字节（索引为 9）
+        if len(self.data) > (KEY_STATUS_QI_BYTE - 1):
+            byte = self.data[KEY_STATUS_QI_BYTE - 1]
+            download_status = (byte & 0x01) == 0x01  # 提取 bit0
+            enable_status = (byte & 0x10) == 0x10    # 提取 bit4
+            key_status.append((download_status, enable_status))
 
+        return key_status, self.NO_ERROR
+    
     @staticmethod
     def _generate_serial_bytes(data_type, command, data):
         '''
@@ -390,13 +415,16 @@ class ConfigParams:
     BAUDRATE_ERROR = 'BAUDRATE_ERROR'
     REQUEST_ID_ERROR = 'REQUEST_ID_ERROR'
     RESPONSE_ID_ERROR = 'RESPONSE_ID_ERROR'
-    QI_TRANSMIT_ID_ERROR = 'QI_TRANSMIT_ID_ERROR'
-    QI_RECEIVE_ID_ERROR = 'QI_RECEIVE_ID_ERROR'
     GET_KEY_STATUS_ERROR = 'GET_KEY_STATUS_ERROR'
     READ_WRITE_KEY_ERROR = 'READ_WRITE_KEY_ERROR'
+    QI_TRANSMIT_ID_ERROR = 'QI_TRANSMIT_ID_ERROR'
+    QI_RECEIVE_ID_ERROR = 'QI_RECEIVE_ID_ERROR'
+    GET_QI_STATUS_ERROR = 'GET_QI_STATUS_ERROR'
+    NM_ENABLED_ERROR = 'NM_ENABLED_ERROR'
+    NM_LENGTH_ERROR = 'NM_LENGTH_ERROR'
     NM_ID_ERROR = 'NM_ID_ERROR'
     NM_PERIOD_ERROR = 'NM_PERIOD_ERROR'
-    NM_ENABLED_ERROR = 'NM_ENABLED_ERROR'
+    NM_MESSAGE_ERROR = 'NM_MESSAGE_ERROR'
 
     CONFIG_CONSISTENCY_ERROR = 'CONFIG_CONSISTENCY_ERROR'
     LENGTH_TOO_SHORT_ERROR = 'LENGTH_TOO_SHORT_ERROR'
@@ -412,30 +440,37 @@ class ConfigParams:
     RESPONSE_ID_LENGTH = 2
     GET_KEY_STATUS_LENGTH = 2
     READ_WRITE_KEY_LENGTH = 2
+    QI_TRANSMIT_ID_LENGTH = 2   # new
+    QI_RECEIVE_ID_LENGTH = 2    # new
+    GET_QI_STATUS_LENGTH = 2    # new
     NM_ENABLED_LENGTH = 1
     NM_ID_LENGTH = 2
     NM_PERIOD_LENGTH = 2
+    NM_MESSAGE_LENGTH = 64      # new
 
     BAUDRATE_START = CAN_TYPE_START + CAN_TYPE_LENGTH
     REQUEST_ID_START = BAUDRATE_START + BAUDRATE_LENGTH
     RESPONSE_ID_START = REQUEST_ID_START + REQUEST_ID_LENGTH
     GET_KEY_STATUS_START = RESPONSE_ID_START + RESPONSE_ID_LENGTH
     READ_WRITE_KEY_START = GET_KEY_STATUS_START + GET_KEY_STATUS_LENGTH
-    NM_ENABLED_START = READ_WRITE_KEY_START + READ_WRITE_KEY_LENGTH
+    QI_TRANSMIT_ID_START = READ_WRITE_KEY_START + READ_WRITE_KEY_LENGTH # new
+    QI_RECEIVE_ID_START = QI_TRANSMIT_ID_START + QI_TRANSMIT_ID_LENGTH  # new
+    GET_QI_STATUS_START = QI_RECEIVE_ID_START + QI_RECEIVE_ID_LENGTH    # new
+    NM_ENABLED_START = GET_QI_STATUS_START + GET_QI_STATUS_LENGTH       # new
     NM_ID_START = NM_ENABLED_START + NM_ENABLED_LENGTH
     NM_PERIOD_START = NM_ID_START + NM_ID_LENGTH
+    NM_MESSAGE_START = NM_PERIOD_START + NM_PERIOD_LENGTH               # new
 
     def __init__(self, data, toml_path):
         self.toml_path = toml_path
         self.data = data
 
     @classmethod
-    def from_toml_data(cls, toml_path, config_type):
+    def from_toml_data(cls, toml_path):
         '''
         从 TOML 数据中解析出配置参数的各个字段。
 
         :param toml_path: TOML 文件路径
-        :param config_type: 配置类型    私有密钥，qi证书
         '''
         try:
             config = file_utils.read_toml_file(toml_path)
@@ -444,20 +479,21 @@ class ConfigParams:
 
             can_config = config.get(ValidValues.CAN_CONFIG_SECTION, {})
             diag_did = config.get(ValidValues.DIAG_DID_SECTION, {})
+            qi_config = config.get(ValidValues.QI_CERTIFICATE_SECTION, {})
             nm_config = config.get(ValidValues.NM_CONFIG_SECTION, {})
 
             # 定义一个辅助函数用于转换并捕获异常
             def convert_and_catch(param_name, value, length):
                 try:
                     if value is None:
-                        logger.error(f'参数 {param_name} 未找到。')
+                        logger.error('参数 %s 未找到。', param_name)
                         return None, cls.PARAM_NOT_FOUND_ERROR
                     return utils.int_to_fixed_bytes(value, length), cls.NO_ERROR
                 except OverflowError:
-                    logger.error(f'参数 {param_name} ({value}) 无法用 {length} 字节表示。')
+                    logger.error('参数 %s (%s) 无法用 %d 字节表示。', param_name, value, length)
                     return None, cls.PARSE_ERROR
 
-            can_type = cls.convert_can_type(can_config.get(ValidValues.CAN_TYPE_KEY), config_type)
+            can_type = cls.convert_can_type(can_config.get(ValidValues.CAN_TYPE_KEY))
             if can_type is None:
                 logger.error('参数 can_type 转换失败。')
                 return None, cls.CAN_TYPE_ERROR
@@ -466,37 +502,38 @@ class ConfigParams:
             if baudrate is None:
                 return None, cls.BAUDRATE_ERROR
 
-            if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                qi_transmit_id, result = convert_and_catch(ValidValues.QI_TRANSMIT_ID_KEY, can_config.get(ValidValues.QI_TRANSMIT_ID_KEY), cls.REQUEST_ID_LENGTH)
-                if qi_transmit_id is None:
-                    return None, cls.QI_TRANSMIT_ID_ERROR
-                
-                qi_receive_id, result = convert_and_catch(ValidValues.QI_RECEIVE_ID_KEY, can_config.get(ValidValues.QI_RECEIVE_ID_KEY), cls.RESPONSE_ID_LENGTH)
-                if qi_receive_id is None:
-                    return None, cls.QI_RECEIVE_ID_ERROR
-            else:
-                request_id, result = convert_and_catch(ValidValues.REQUEST_ID_KEY, can_config.get(ValidValues.REQUEST_ID_KEY), cls.REQUEST_ID_LENGTH)
-                if request_id is None:
-                    return None, cls.REQUEST_ID_ERROR
+            request_id, result = convert_and_catch(ValidValues.REQUEST_ID_KEY, can_config.get(ValidValues.REQUEST_ID_KEY), cls.REQUEST_ID_LENGTH)
+            if request_id is None:
+                return None, cls.REQUEST_ID_ERROR
 
-                response_id, result = convert_and_catch(ValidValues.RESPONSE_ID_KEY, can_config.get(ValidValues.RESPONSE_ID_KEY), cls.RESPONSE_ID_LENGTH)
-                if response_id is None:
-                    return None, cls.RESPONSE_ID_ERROR
+            response_id, result = convert_and_catch(ValidValues.RESPONSE_ID_KEY, can_config.get(ValidValues.RESPONSE_ID_KEY), cls.RESPONSE_ID_LENGTH)
+            if response_id is None:
+                return None, cls.RESPONSE_ID_ERROR
 
             get_key_status, result = convert_and_catch(ValidValues.GET_KEY_STATUS_KEY, diag_did.get(ValidValues.GET_KEY_STATUS_KEY), cls.GET_KEY_STATUS_LENGTH)
-            if config_type != ValidValues.CONFIG_TYPE_QI_CERT and get_key_status is None:
+            if get_key_status is None:
                 return None, cls.GET_KEY_STATUS_ERROR
-            elif config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                get_key_status = b'\x00\x00'
 
             read_write_key, result = convert_and_catch(ValidValues.READ_WRITE_KEY_KEY, diag_did.get(ValidValues.READ_WRITE_KEY_KEY), cls.READ_WRITE_KEY_LENGTH)
-            if config_type != ValidValues.CONFIG_TYPE_QI_CERT and read_write_key is None:
+            if read_write_key is None:
                 return None, cls.READ_WRITE_KEY_ERROR
-            elif config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                read_write_key = b'\x00\x00'
-
-            nm_enabled = cls.convert_nm_enabled(nm_config.get(ValidValues.NM_ENABLED_KEY))
-            if nm_enabled is None:
+            
+            qi_transmit_id, result = convert_and_catch(ValidValues.QI_TRANSMIT_ID_KEY, qi_config.get(ValidValues.QI_TRANSMIT_ID_KEY), cls.QI_TRANSMIT_ID_LENGTH)
+            if qi_transmit_id is None:
+                return None, cls.QI_TRANSMIT_ID_ERROR
+            
+            qi_receive_id, result = convert_and_catch(ValidValues.QI_RECEIVE_ID_KEY, qi_config.get(ValidValues.QI_RECEIVE_ID_KEY), cls.QI_RECEIVE_ID_LENGTH)
+            if qi_receive_id is None:
+                return None, cls.QI_RECEIVE_ID_ERROR
+            
+            get_qi_status, result = convert_and_catch(ValidValues.GET_QI_STATUS_KEY, qi_config.get(ValidValues.GET_QI_STATUS_KEY), cls.GET_QI_STATUS_LENGTH)
+            if get_qi_status is None:
+                return None, cls.GET_QI_STATUS_ERROR
+            
+            nm_enabled = nm_config.get(ValidValues.NM_ENABLED_KEY)
+            nm_dlc = nm_config.get(ValidValues.NM_DLC_KEY)
+            nm_enabled_byte = cls.convert_nm_enabled(nm_enabled, nm_dlc)
+            if nm_enabled_byte is None:
                 logger.error('参数 nm_enabled 转换失败。')
                 return None, cls.NM_ENABLED_ERROR
 
@@ -507,11 +544,12 @@ class ConfigParams:
             nm_period, result = convert_and_catch(ValidValues.NM_PERIOD_KEY, nm_config.get(ValidValues.NM_PERIOD_KEY), cls.NM_PERIOD_LENGTH)
             if nm_period is None:
                 return None, cls.NM_PERIOD_ERROR
+            
+            nm_message = cls.convert_nm_message(nm_config.get(ValidValues.NM_MESSAGE_KEY), nm_dlc)
+            if nm_message is None:
+                return None, cls.NM_MESSAGE_ERROR
 
-            if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                data = can_type + baudrate + qi_receive_id + qi_transmit_id + get_key_status + read_write_key + nm_enabled + nm_id + nm_period
-            else:
-                data = can_type + baudrate + request_id + response_id + get_key_status + read_write_key + nm_enabled + nm_id + nm_period
+            data = can_type + baudrate + request_id + response_id + get_key_status + read_write_key + qi_transmit_id + qi_receive_id + get_qi_status + nm_enabled_byte + nm_id + nm_period + nm_message
             return cls(data, toml_path), cls.NO_ERROR
 
         except Exception as e:
@@ -519,21 +557,15 @@ class ConfigParams:
             return None, cls.CONFIG_PARAMS_ERROR
 
     @staticmethod
-    def convert_can_type(can_type:str, config_type:str):
+    def convert_can_type(can_type:str):
 
         '''
         将 CAN 类型字符串转换为对应的字节数值。
         如果输入的类型不在映射中，则返回 None。
         :param can_type: 通信类型字符串，如 'CAN', 'CANFD', 'LIN', 'Uart'
-        :param config_type: 配置类型字符串，如 'KEY', 'QI'
         :return: 对应的字节数值，如 b'\x01', b'\x02', b'\x03', b'\x04'
         '''
         can_type_byte = ValidValues.CAN_TYPE_MAPPING.get(can_type.upper())
-        if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-            # 将bytes转换为整数进行位运算
-            can_type_int = int.from_bytes(can_type_byte, byteorder='big')
-            can_type_int |= int.from_bytes(ValidValues.PROTOCOL_QI, byteorder='big')
-            can_type_byte = can_type_int.to_bytes(1, byteorder='big')
         return can_type_byte
     
     @staticmethod
@@ -561,17 +593,50 @@ class ConfigParams:
         return baudrate.to_bytes(3, byteorder='little')
     
     @staticmethod
-    def convert_nm_enabled(nm_enabled):
-        '''
-        将 nm_enabled 转换为byte。
+    def convert_nm_enabled(nm_enabled, nm_dlc=None):
+        """
+        将 nm_enabled 转换为 byte。
 
         :param nm_enabled: 要转换的值，True 或 False
+        :param nm_dlc: 网络管理报文 DLC，8 或 15（代表 64 字节）
         :return: 转换后的 byte 值
-        '''
-        if nm_enabled:
-            return b'\x01'
-        else:
-            return b'\x00'
+        """
+        try:
+            return ValidValues.NM_ENABLED_MAPPING[nm_enabled][nm_dlc]
+        except KeyError:
+            if nm_enabled not in [True, False]:
+                logger.error('nm_enabled 值无效: %s', nm_enabled)
+            else:
+                logger.error('nm_enabled 为 %s 时，nm_dlc 值无效: %s', nm_enabled, nm_dlc)
+            return None
+
+    @staticmethod
+    def convert_nm_message(nm_message_str, nm_dlc):
+        """
+        根据 nm_dlc 处理 nm_message 的长度，不足补 00，超过则截取。
+        协议强制64字节，8字节报文传输时补00到64字节
+
+        :param nm_message: 网络管理报文的字节数组
+        :param nm_dlc: 网络管理报文 DLC，8 或 15（代表 64 字节）
+        :return: 处理后的字节数组，如果 nm_dlc 值无效则返回 None
+        """
+        nm_message = utils.split_hex_string_to_byte_array(nm_message_str)
+        # 根据 nm_dlc 确定目标长度
+        # if nm_dlc not in ValidValues.CAN_DLC_LENGTH:
+        #     logger.error('nm_dlc 值无效: %s', nm_dlc)
+        #     return None
+        # target_length = ValidValues.CAN_DLC_LENGTH[nm_dlc]
+        target_length = 64
+
+        # 补零或截取
+        if len(nm_message) < target_length:
+            nm_message += b'\x00' * (target_length - len(nm_message))
+        # 协议强制64字节
+        # elif len(nm_message) > target_length:
+        #     nm_message = nm_message[:target_length]
+        #     logger.warning('nm_message 长度超过 %d 字节，已截取前 %d 字节', target_length, target_length)
+
+        return nm_message
 
     @staticmethod
     def to_config_str(data):
@@ -580,35 +645,67 @@ class ConfigParams:
 
         :return: 包含配置数据的字符串
         '''
+        # logger.debug(utils.byte_array_to_hex_string(data))
         # todo 判断是否为读取失败
+        # get_data_body
         # 计算数据长度
-        length = ConfigParams.NM_PERIOD_START + ConfigParams.NM_PERIOD_LENGTH
+        length = ConfigParams.NM_MESSAGE_START + ConfigParams.NM_MESSAGE_LENGTH
         if len(data) < length:
             if SerialMessage.is_failure_response(data):
                 logger.error('读取到的配置信息为失败响应。')
                 return None, SerialMessage.DATA_RESPONSE_FFFF
-            logger.error(f'读取到的配置信息长度不足，需要 {length} 字节，实际只有 {len(data)} 字节，读取到 [{utils.byte_array_to_hex_string(data)}]。')
+            logger.error('读取到的配置信息长度不足，需要 %d 字节，实际只有 %d 字节，读取到 [%s]。', length, len(data), utils.byte_array_to_hex_string(data))
             return None, ConfigParams.LENGTH_TOO_SHORT_ERROR
         elif len(data) > length:
-            logger.error(f'读取到的配置信息长度超过预期，需要 {length} 字节，实际有 {len(data)} 字节，读取到 [{utils.byte_array_to_hex_string(data)}]。')
+            logger.error('读取到的配置信息长度超过预期，需要 %d 字节，实际有 %d 字节，读取到 [%s]。', length, len(data), utils.byte_array_to_hex_string(data))
             return None, ConfigParams.LENGTH_TOO_LONG_ERROR
 
         try:
 
             # 提取各部分数据
-            can_type, config_type = ConfigParams._extract_can_type(data)
+            can_type = ConfigParams._extract_can_type(data)
+            # logger.debug('can_type: %s', can_type)
+
             baudrate = ConfigParams._extract_baudrate(data)
-            if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                qi_transmit_id = ConfigParams._extract_qi_transmit_id(data)
-                qi_receive_id = ConfigParams._extract_qi_receive_id(data)
-            else:
-                request_id = ConfigParams._extract_request_id(data)
-                response_id = ConfigParams._extract_response_id(data)
-                get_key_status = ConfigParams._extract_get_key_status(data)
-                read_write_key = ConfigParams._extract_read_write_key(data)
-            nm_enabled = ConfigParams._extract_nm_enabled(data)
+            # logger.debug('baudrate: %s', baudrate)
+
+            request_id = ConfigParams._extract_request_id(data)
+            # logger.debug('request_id: %s', request_id)
+
+            response_id = ConfigParams._extract_response_id(data)
+            # logger.debug('response_id: %s', response_id)
+
+            get_key_status = ConfigParams._extract_get_key_status(data)
+            # logger.debug('get_key_status: %s', get_key_status)
+
+            read_write_key = ConfigParams._extract_read_write_key(data)
+            # logger.debug('read_write_key: %s', read_write_key)
+
+            # 新增
+            qi_transmit_id = ConfigParams._extract_qi_transmit_id(data)
+            # logger.debug('qi_transmit_id: %s', qi_transmit_id)
+
+            qi_receive_id = ConfigParams._extract_qi_receive_id(data)
+            # logger.debug('qi_receive_id: %s', qi_receive_id)
+
+            get_qi_status = ConfigParams._extract_get_qi_status(data)
+            # logger.debug('get_qi_status: %s', get_qi_status)
+
+            #变更
+            nm_enabled, nm_DLC = ConfigParams._extract_nm_enabled(data)
+            # logger.debug('nm_enabled: %s', nm_enabled)
+            # logger.debug('nm_DLC: %s', nm_DLC)
+
             nm_id = ConfigParams._extract_nm_id(data)
+            # logger.debug('nm_id: %s', nm_id)
+
             nm_period = ConfigParams._extract_nm_period(data)
+            # logger.debug('nm_period: %s', nm_period)
+
+            # 新增
+            nm_message = ConfigParams._extract_get_nm_message(data)
+            # logger.debug('nm_message: %s', nm_message)
+
 
             # 转换波特率
             if can_type in ['CAN', 'CANFD']:  # CAN 或 CANFD
@@ -618,43 +715,56 @@ class ConfigParams:
                     baudrate_str = f'{baudrate}K'
             else:
                 baudrate_str = str(baudrate)
+            # logger.debug('baudrate_str: %s', baudrate_str)
 
             # 转换 ID 为十六进制
-            if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                qi_transmit_id_str = hex(qi_transmit_id)
-                qi_receive_id_str = hex(qi_receive_id)
-            else:
-                request_id_str = hex(request_id)
-                response_id_str = hex(response_id)
-                get_key_status_str = hex(get_key_status)
-                read_write_key_str = hex(read_write_key)
+            request_id_str = hex(request_id)
+            # logger.debug('request_id_str: %s', request_id_str)
+
+            response_id_str = hex(response_id)
+            # logger.debug('response_id_str: %s', response_id_str)
+
+            get_key_status_str = hex(get_key_status)
+            # logger.debug('get_key_status_str: %s', get_key_status_str)
+
+            read_write_key_str = hex(read_write_key)
+            # logger.debug('read_write_key_str: %s', read_write_key_str)
+
+            qi_transmit_id_str = hex(qi_transmit_id)
+            # logger.debug('qi_transmit_id_str: %s', qi_transmit_id_str)
+            qi_receive_id_str = hex(qi_receive_id)
+            # logger.debug('qi_receive_id_str: %s', qi_receive_id_str)
+            get_qi_status_str = hex(get_qi_status)
+            # logger.debug('get_qi_key_status_str: %s', get_qi_status_str)
             nm_id_str = hex(nm_id)
+            # logger.debug('nm_id_str: %s', nm_id_str)
+            nm_message_str = utils.byte_array_to_hex_string_with_newline(nm_message[:ValidValues.CAN_DLC_LENGTH[nm_DLC]])
+            # logger.debug('nm_message_str: %s', nm_message_str)
 
             # 转换网络管理使能状态
             nm_enabled_str = '使能' if nm_enabled else '不使能'
+            # logger.debug('nm_enabled_str: %s', nm_enabled_str)
 
-            if config_type == ValidValues.CONFIG_TYPE_QI_CERT:
-                return f'通信类型：{can_type}\n' \
-                f'通信速率：{baudrate_str}\n' \
-                f'Qi证书下载透传发送 ID：{qi_transmit_id_str}\n' \
-                f'Qi证书下载透传接收 ID：{qi_receive_id_str}\n' \
-                f'网络管理报文使能：{nm_enabled_str}\n' \
-                f'网络管理 ID：{nm_id_str}\n' \
-                f'网络管理报文周期：{nm_period}MS', ConfigParams.NO_ERROR
-            else:
-                return f'通信类型：{can_type}\n' \
-                f'通信速率：{baudrate_str}\n' \
-                f'诊断请求 ID：{request_id_str}\n' \
-                f'诊断响应 ID：{response_id_str}\n' \
-                f'获取密钥状态 DID：{get_key_status_str}\n' \
-                f'读写 DID：{read_write_key_str}\n' \
-                f'网络管理报文使能：{nm_enabled_str}\n' \
-                f'网络管理 ID：{nm_id_str}\n' \
-                f'网络管理报文周期：{nm_period}MS', ConfigParams.NO_ERROR
+            return f'通信类型：{can_type}\n' \
+                    f'通信速率：{baudrate_str}\n' \
+                    f'诊断请求 ID：{request_id_str}\n' \
+                    f'诊断响应 ID：{response_id_str}\n' \
+                    f'获取密钥状态 DID：{get_key_status_str}\n' \
+                    f'读写 DID：{read_write_key_str}\n' \
+                    f'Qi证书下载透传发送 ID：{qi_transmit_id_str}\n' \
+                    f'Qi证书下载透传接收 ID：{qi_receive_id_str}\n' \
+                    f'获取Qi密钥状态 DID：{get_qi_status_str}\n' \
+                    f'网络管理报文使能：{nm_enabled_str}\n' \
+                    f'网络管理 DLC：{nm_DLC}\n' \
+                    f'网络管理 ID：{nm_id_str}\n' \
+                    f'网络管理报文周期：{nm_period}MS\n' \
+                    f'网络管理报文信息：\n{nm_message_str}', ConfigParams.NO_ERROR
         
         except Exception as e:
             # 记录异常信息
-            logger.error(f'转换配置数据为字符串时出错: {e}')
+            logger.error('转换配置数据为字符串时出错: %s', e)
+            # import traceback
+            # logger.error(traceback.format_exc())
             return None, ConfigParams.PARSE_ERROR
        
     # TODO 预留功能，写回toml文件
@@ -662,11 +772,11 @@ class ConfigParams:
     def to_toml_data(data, path):
         '''
         将 ConfigParams 实例中的数据转换回 TOML 格式的数据。
-
+        未更新，未使用
         :return: 包含配置数据的字典，可用于生成 TOML 文件
         '''
         # 提取各部分数据
-        can_type, config_type = ConfigParams._extract_can_type(data)
+        can_type = ConfigParams._extract_can_type(data)
         baudrate = ConfigParams._extract_baudrate(data)
         request_id = ConfigParams._extract_request_id(data)
         response_id = ConfigParams._extract_response_id(data)
@@ -674,9 +784,10 @@ class ConfigParams:
         qi_receive_id = ConfigParams._extract_qi_receive_id(data)
         get_key_status = ConfigParams._extract_get_key_status(data)
         read_write_key = ConfigParams._extract_read_write_key(data)
-        nm_enabled = ConfigParams._extract_nm_enabled(data)
+        nm_enabled, nm_DLC = ConfigParams._extract_nm_enabled(data)
         nm_id = ConfigParams._extract_nm_id(data)
         nm_period = ConfigParams._extract_nm_period(data)
+        nm_message = ConfigParams._extract_get_nm_message(data)
 
         # 构建 TOML 数据字典
         toml_data = {
@@ -718,17 +829,10 @@ class ConfigParams:
             byteorder='big'
         )
         
-        # 提取协议类型（最高位）
-        config_type = ValidValues.CONFIG_TYPE_QI_CERT if (can_type_byte & 0x80) else ValidValues.CONFIG_TYPE_PRIVATE_KEY
         
-        # 提取CAN类型（低7位）
-        can_type_value = can_type_byte & 0x7F  # 清除最高位
-        can_type_bytes = can_type_value.to_bytes(1, byteorder='big')
+        can_type_bytes = can_type_byte.to_bytes(1, byteorder='big')
         
-        return (
-            ValidValues.CAN_TYPE_MAPPING_REVERSE.get(can_type_bytes, f'未知类型{can_type_bytes.hex()}'),
-            config_type
-        )
+        return ValidValues.CAN_TYPE_MAPPING_REVERSE.get(can_type_bytes, f'未知类型{can_type_bytes.hex()}')
     
     @staticmethod
     def _extract_baudrate(data):
@@ -772,34 +876,6 @@ class ConfigParams:
         response_id_bytes = data[ConfigParams.RESPONSE_ID_START:ConfigParams.RESPONSE_ID_START + ConfigParams.RESPONSE_ID_LENGTH]
         response_id = int.from_bytes(response_id_bytes, byteorder='little')
         return response_id
-    
-    @staticmethod
-    def _extract_qi_transmit_id(data):
-        '''
-        提取 QI 通信发送 ID
-        :param data: 配置数据
-        :return: QI 通信发送 ID 的字节数据，如果数据长度不足则返回 None
-        '''
-        if len(data) < ConfigParams.REQUEST_ID_START + ConfigParams.REQUEST_ID_LENGTH:
-            logger.error('数据长度不足，无法提取 QI 通信发送 ID')
-            return None
-        qi_transmit_id_bytes = data[ConfigParams.REQUEST_ID_START:ConfigParams.REQUEST_ID_START + ConfigParams.REQUEST_ID_LENGTH]
-        qi_transmit_id = int.from_bytes(qi_transmit_id_bytes, byteorder='little')
-        return qi_transmit_id
-    
-    @staticmethod
-    def _extract_qi_receive_id(data):
-        '''
-        提取 QI 通信接收 ID
-        :param data: 配置数据
-        :return: QI 通信接收 ID 的字节数据，如果数据长度不足则返回 None
-        '''
-        if len(data) < ConfigParams.RESPONSE_ID_START + ConfigParams.RESPONSE_ID_LENGTH:
-            logger.error('数据长度不足，无法提取 QI 通信接收 ID')
-            return None
-        qi_receive_id_bytes = data[ConfigParams.RESPONSE_ID_START:ConfigParams.RESPONSE_ID_START + ConfigParams.RESPONSE_ID_LENGTH]
-        qi_receive_id = int.from_bytes(qi_receive_id_bytes, byteorder='little')
-        return qi_receive_id
 
     @staticmethod
     def _extract_get_key_status(data):
@@ -830,19 +906,68 @@ class ConfigParams:
         return read_write_key
 
     @staticmethod
+    def _extract_qi_transmit_id(data):
+        '''
+        提取 QI 通信发送 ID
+        :param data: 配置数据
+        :return: QI 通信发送 ID 的字节数据，如果数据长度不足则返回 None
+        '''
+        if len(data) < ConfigParams.QI_TRANSMIT_ID_START + ConfigParams.QI_TRANSMIT_ID_LENGTH:
+            logger.error('数据长度不足，无法提取 QI 证书透传发送 ID')
+            return None
+        qi_transmit_id_bytes = data[ConfigParams.QI_TRANSMIT_ID_START:ConfigParams.QI_TRANSMIT_ID_START + ConfigParams.QI_TRANSMIT_ID_LENGTH]
+        qi_transmit_id = int.from_bytes(qi_transmit_id_bytes, byteorder='little')
+        return qi_transmit_id
+    
+    @staticmethod
+    def _extract_qi_receive_id(data):
+        '''
+        提取 QI 通信接收 ID
+        :param data: 配置数据
+        :return: QI 通信接收 ID 的字节数据，如果数据长度不足则返回 None
+        '''
+        if len(data) < ConfigParams.QI_RECEIVE_ID_START + ConfigParams.QI_RECEIVE_ID_LENGTH:
+            logger.error('数据长度不足，无法提取 QI 通信接收 ID')
+            return None
+        qi_receive_id_bytes = data[ConfigParams.QI_RECEIVE_ID_START:ConfigParams.QI_RECEIVE_ID_START + ConfigParams.QI_RECEIVE_ID_LENGTH]
+        qi_receive_id = int.from_bytes(qi_receive_id_bytes, byteorder='little')
+        return qi_receive_id
+    
+    @staticmethod
+    def _extract_get_qi_status(data):
+        '''
+        提取 QI 通信密钥 ID
+        :param data: 配置数据
+        :return: QI 通信密钥 ID 的字节数据，如果数据长度不足则返回 None
+        '''
+        if len(data) < ConfigParams.GET_QI_STATUS_START + ConfigParams.GET_QI_STATUS_LENGTH:
+            logger.error('数据长度不足，无法提取 QI 通信密钥 ID')
+            return None
+        get_qi_status_bytes = data[ConfigParams.GET_QI_STATUS_START:ConfigParams.GET_QI_STATUS_START + ConfigParams.GET_QI_STATUS_LENGTH]
+        get_qi_status = int.from_bytes(get_qi_status_bytes, byteorder='little')
+        return get_qi_status
+
+    @staticmethod
     def _extract_nm_enabled(data):
         '''
-        提取网络管理使能状态
+        提取网络管理使能状态和 nm_dlc 值
         :param data: 配置数据
-        :return: 网络管理使能状态的字节数据，如果数据长度不足则返回 None
+        :return: 网络管理使能状态的布尔值和 nm_dlc 值，如果数据长度不足或无对应映射则返回 None
         '''
         if len(data) < ConfigParams.NM_ENABLED_START + ConfigParams.NM_ENABLED_LENGTH:
             logger.error('数据长度不足，无法提取网络管理使能状态')
-            return None
-        nm_enabled_byte = data[ConfigParams.NM_ENABLED_START:ConfigParams.NM_ENABLED_START + ConfigParams.NM_ENABLED_LENGTH]
-        # 假设 0x01 表示 True，0x00 表示 False
-        nm_enabled = bool(int.from_bytes(nm_enabled_byte, byteorder='little'))
-        return nm_enabled
+            return None, None
+        nm_enabled_bytes = data[ConfigParams.NM_ENABLED_START:ConfigParams.NM_ENABLED_START + ConfigParams.NM_ENABLED_LENGTH]
+        # 将 bytearray 转换为 bytes 类型
+        nm_enabled_byte = bytes(nm_enabled_bytes)
+        # 从反向映射中获取网络管理使能状态和 nm_dlc 值
+        result = ValidValues.NM_ENABLED_MAPPING_REVERSE.get(nm_enabled_byte)
+        if result:
+            nm_enabled, nm_dlc = result
+            return nm_enabled, nm_dlc
+        else:
+            logger.error('未找到对应的网络管理使能状态映射，字节值: %s', utils.byte_array_to_hex_string(nm_enabled_byte))
+            return None, None
 
     @staticmethod
     def _extract_nm_id(data):
@@ -872,16 +997,30 @@ class ConfigParams:
         nm_period = int.from_bytes(nm_period_bytes, byteorder='little')
         return nm_period
     
+    @staticmethod
+    def _extract_get_nm_message(data):
+        '''
+        提取网络管理报文
+        :param data: 配置数据
+        :return: 网络管理报文的字节数据，如果数据长度不足则返回 None
+        '''
+        if len(data) < ConfigParams.NM_MESSAGE_START + ConfigParams.NM_MESSAGE_LENGTH:
+            logger.error('数据长度不足，无法提取网络管理报文')
+            return None
+        nm_message_bytes = data[ConfigParams.NM_MESSAGE_START:ConfigParams.NM_MESSAGE_START + ConfigParams.NM_MESSAGE_LENGTH]
+        return nm_message_bytes
+    
     def __str__(self):
         return f'数据：{utils.byte_array_to_hex_string(self.data)}'
 
 if __name__ == '__main__':
     # config, result = ConfigParams.from_toml_data('tool-config.toml', ValidValues.CONFIG_TYPE_QI_CERT)
-    config, result = ConfigParams.from_toml_data('D:/project/serial/SerialToCAN/output/WPC053-1-tool-config.toml', ValidValues.CONFIG_TYPE_QI_CERT)
+    # config, result = ConfigParams.from_toml_data('D:/project/serial/SerialToCAN/output/tool-config.toml')
     
-    print(config)
-    print(result)
-    print(ConfigParams.to_config_str(config.data))
+    # print(config)
+    # print(result)
+    # byte_str = "01 f4 01 00 24 07 2c 07 09 42 0a 42 f0 07 f1 07 0d 42 40 05 05 c8 00 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+    # print(ConfigParams.to_config_str(utils.hex_str_to_byte_array(byte_str)))
     print('start')
     # print(utils.byte_array_to_hex_string(utils.ascii_to_array('ABCDEF')))
     # data_type = ValidValues.DATA_TYPE_RESPONSE
@@ -906,3 +1045,6 @@ if __name__ == '__main__':
 #     数据类型：0x00 请求，命令：0x0001 读取软件版本号，数据：41424344454647484950（ASCII：ABCDEFGHIP）)
 #     end
 #     '''
+
+    
+    # print(ValidValues.NM_ENABLED_MAPPING_REVERSE)

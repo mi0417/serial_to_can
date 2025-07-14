@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>625</width>
-    <height>800</height>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,6 +79,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>连接串口</string>
+         </property>
          <property name="text">
           <string>连接</string>
          </property>
@@ -104,6 +107,9 @@
            <width>100</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>查看串口log</string>
          </property>
          <property name="text">
           <string>串口log</string>
@@ -145,19 +151,35 @@
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QLineEdit" name="configFilePathEdit"/>
-           </item>
-           <item>
-            <widget class="QPushButton" name="selectConfigBtn">
-             <property name="text">
-              <string>选择文件</string>
+            <widget class="QLineEdit" name="configFilePathEdit">
+             <property name="toolTip">
+              <string>选择配置文件或输入后按回车进行导入</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="inputConfigBtn">
+            <widget class="QPushButton" name="selectConfigBtn">
+             <property name="toolTip">
+              <string>选择配置文件</string>
+             </property>
              <property name="text">
-              <string>导入设置</string>
+              <string>选择文件</string>
+             </property>
+             <property name="icon">
+              <iconset theme="QIcon::ThemeIcon::FolderOpen"/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="editConfigBtn">
+             <property name="toolTip">
+              <string>编辑配置文件</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset theme="QIcon::ThemeIcon::MailMessageNew"/>
              </property>
             </widget>
            </item>
@@ -193,6 +215,9 @@
               </property>
               <item>
                <widget class="QPushButton" name="getSwVerButton">
+                <property name="toolTip">
+                 <string>读密钥下载工具硬件版本号</string>
+                </property>
                 <property name="text">
                  <string>读软件版本号</string>
                 </property>
@@ -200,6 +225,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="resetButton">
+                <property name="toolTip">
+                 <string>密钥下载工具执行复位</string>
+                </property>
                 <property name="text">
                  <string>复位</string>
                 </property>
@@ -220,6 +248,9 @@
               </item>
               <item>
                <widget class="QPushButton" name="getConfigButton">
+                <property name="toolTip">
+                 <string>读取密钥下载工具当前设置</string>
+                </property>
                 <property name="text">
                  <string>读取配置</string>
                 </property>
@@ -246,62 +277,10 @@
                 <property name="text">
                  <string>一键配置</string>
                 </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="widget_4" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="configTypeLabel">
-                <property name="text">
-                 <string>配置类型</string>
+                <property name="icon">
+                 <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
                 </property>
                </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="keyRadioButton">
-                <property name="text">
-                 <string>私有协议密钥下载</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="qiRadioButton">
-                <property name="text">
-                 <string>Qi证书下载</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_3">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
               </item>
              </layout>
             </widget>
@@ -317,6 +296,9 @@
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
             <widget class="QPushButton" name="getKeyStatusButton">
+             <property name="toolTip">
+              <string>读取密钥状态</string>
+             </property>
              <property name="text">
               <string>获取密钥状态</string>
              </property>
@@ -327,10 +309,10 @@
              <property name="maximumSize">
               <size>
                <width>16777215</width>
-               <height>160</height>
+               <height>190</height>
               </size>
              </property>
-             <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,1,1,1,1" columnstretch="1,1,1">
+             <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,1,1,1,1,1" columnstretch="0,0,5,5" columnminimumwidth="0,0,0,0">
               <property name="leftMargin">
                <number>1</number>
               </property>
@@ -346,19 +328,25 @@
               <property name="spacing">
                <number>0</number>
               </property>
-              <item row="5" column="0">
-               <widget class="QLabel" name="honorLabel">
+              <item row="3" column="0">
+               <widget class="QLabel" name="vivoLabel">
                 <property name="maximumSize">
                  <size>
-                  <width>50</width>
+                  <width>16777215</width>
                   <height>16777215</height>
                  </size>
                 </property>
                 <property name="text">
-                 <string>荣耀</string>
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/vivo_30_70.png</pixmap>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
                 </property>
                 <property name="textInteractionFlags">
                  <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
@@ -369,7 +357,183 @@
                <widget class="QLabel" name="xiaomiLabel">
                 <property name="maximumSize">
                  <size>
-                  <width>50</width>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="layoutDirection">
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/xiaomi_30_70.png</pixmap>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="spaceLabel">
+                <property name="minimumSize">
+                 <size>
+                  <width>70</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QLabel" name="honorLabel">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/HONOR_30_70.png</pixmap>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0">
+               <widget class="QLabel" name="qiLabel">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/qi_30_70.png</pixmap>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="oppoLabel">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/oppo_30_70.png</pixmap>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="huaweiLabel">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="pixmap">
+                 <pixmap resource="logo.qrc">:/imgs/huawei_30_70.png</pixmap>
+                </property>
+                <property name="scaledContents">
+                 <bool>false</bool>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLabel" name="oppoLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>OPPO</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QLabel" name="vivoLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>vivo</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="xiaomiLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -377,14 +541,59 @@
                  <string>小米</string>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
+              <item row="4" column="1">
+               <widget class="QLabel" name="huaweiLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>华为</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QLabel" name="honorLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>荣耀</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QLabel" name="qiLabel_2">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Qi</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
                <widget class="QLabel" name="keyStatusLabel">
                 <property name="minimumSize">
                  <size>
@@ -403,130 +612,7 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="2">
-               <widget class="QLabel" name="huaweiFastChargeStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QLabel" name="vivoKeyStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="1">
-               <widget class="QLabel" name="honorKeyStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="2">
-               <widget class="QLabel" name="honorFastChargeStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="2">
-               <widget class="QLabel" name="vivoFastChargeStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QLabel" name="huaweiKeyStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="huaweiLabel">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>华为</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="oppoKeyStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="xiaomiKeyStatus">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
+              <item row="0" column="3">
                <widget class="QLabel" name="fastCahrgeStatusLabel">
                 <property name="minimumSize">
                  <size>
@@ -545,20 +631,85 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="spaceLabel">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
+              <item row="1" column="2">
+               <widget class="QLabel" name="xiaomiKeyStatus">
                 <property name="text">
                  <string/>
                 </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
                </widget>
               </item>
-              <item row="1" column="2">
+              <item row="2" column="2">
+               <widget class="QLabel" name="oppoKeyStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLabel" name="vivoKeyStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2">
+               <widget class="QLabel" name="huaweiKeyStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2">
+               <widget class="QLabel" name="honorKeyStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="2">
+               <widget class="QLabel" name="QiCertStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
                <widget class="QLabel" name="xiaomiFastChargeStatus">
                 <property name="text">
                  <string/>
@@ -571,45 +722,7 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="oppoLabel">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>OPPO</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="vivoLabel">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>vivo</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
+              <item row="2" column="3">
                <widget class="QLabel" name="oppoFastChargeStatus">
                 <property name="text">
                  <string/>
@@ -622,11 +735,82 @@
                 </property>
                </widget>
               </item>
+              <item row="3" column="3">
+               <widget class="QLabel" name="vivoFastChargeStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="3">
+               <widget class="QLabel" name="huaweiFastChargeStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="3">
+               <widget class="QLabel" name="honorFastChargeStatus">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="3">
+               <widget class="QLabel" name="noneQLabel">
+                <property name="text">
+                 <string>——</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard|Qt::TextInteractionFlag::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="spaceLabel1">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </item>
            <item>
             <widget class="QListWidget" name="outputWidget">
+             <property name="toolTip">
+              <string>信息</string>
+             </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::SelectionMode::ContiguousSelection</enum>
              </property>
@@ -656,6 +840,9 @@
            </property>
            <item>
             <widget class="QPushButton" name="clearLogBtn">
+             <property name="toolTip">
+              <string>清空log</string>
+             </property>
              <property name="text">
               <string>清空</string>
              </property>
@@ -676,6 +863,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="scrollBottomBtn">
+             <property name="toolTip">
+              <string>滚动到结尾</string>
+             </property>
              <property name="text">
               <string>滚动到结尾</string>
              </property>
@@ -683,6 +873,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="saveLogBtn">
+             <property name="toolTip">
+              <string>保存串口log</string>
+             </property>
              <property name="text">
               <string>保存</string>
              </property>
@@ -716,6 +909,8 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="logo.qrc"/>
+ </resources>
  <connections/>
 </ui>

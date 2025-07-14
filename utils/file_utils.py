@@ -12,7 +12,6 @@ def resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath('.'), relative_path)
 
-
 def exe_absolute_path(relative_path):
     '''一般用于外部配置文件，如果为绝对路径则不转换'''
     if os.path.isabs(relative_path):
@@ -32,23 +31,15 @@ def is_file_exists(file_path):
     :param file_path: 文件的路径
     :return: 如果文件存在返回 True，否则返回 False
     '''
-    return os.path.exists(file_path)
-
-def is_file_exists(file_path):
-    '''
-    判断指定文件是否存在
-    :param file_path: 文件的路径
-    :return: 如果文件存在返回 True，否则返回 False
-    '''
     try:
         exists = os.path.exists(file_path)
         if exists:
-            logger.info(f'文件 {file_path} 存在。')
+            logger.info('文件 %s 存在。', file_path)
         else:
-            logger.info(f'文件 {file_path} 不存在。')
+            logger.info('文件 %s 不存在。', file_path)
         return exists
     except Exception as e:
-        logger.error(f'检查文件 {file_path} 时出错: {e}')
+        logger.error('检查文件 %s 时出错: %s', file_path, e)
         return False
     
 def create_file(file_path):
@@ -64,7 +55,6 @@ def create_file(file_path):
     except Exception as e:
         logger.error('创建文件 %s 时出错: %s', file_path, e)
 
-
 def read_file(file_path):
     '''
     读取指定文件的内容
@@ -77,7 +67,6 @@ def read_file(file_path):
     except FileNotFoundError:
         logger.error('文件 %s 未找到。', file_path)
         return ''
-
 
 def write_file(file_path, content):
     '''
@@ -92,7 +81,6 @@ def write_file(file_path, content):
     except Exception as e:
         logger.error('写入文件 %s 时出错: %s', file_path, e)
 
-
 def append_to_file(file_path, content):
     '''
     将指定内容追加到文件末尾，如果文件不存在则创建文件
@@ -105,7 +93,6 @@ def append_to_file(file_path, content):
         logger.info('内容已成功追加到 %s。', file_path)
     except Exception as e:
         logger.error('追加内容到文件 %s 时出错: %s', file_path, e)
-
 
 def open_file(file_path, mode='r', encoding='utf-8'):
     '''
@@ -122,7 +109,6 @@ def open_file(file_path, mode='r', encoding='utf-8'):
     except Exception as e:
         logger.error('打开文件 %s 时出错: %s', file_path, e)
         return None
-
 
 def close_file(file):
     '''
