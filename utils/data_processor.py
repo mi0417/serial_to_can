@@ -99,11 +99,13 @@ class ValidValues:
     # 定义 nm_enabled 转换映射
     NM_ENABLED_MAPPING = {
         False: {
+            0: b'\x00',
             8: b'\x00',
             15: b'\x00'
         },
         True: {
-            8: b'\x01',
+            0: b'\x00',
+            8: b'\x10',
             15: b'\x40'
         }
     }
@@ -602,6 +604,7 @@ class ConfigParams:
         :return: 转换后的 byte 值
         """
         try:
+            logger.debug('nm_enabled: %s, nm_dlc: %s', nm_enabled, nm_dlc)
             return ValidValues.NM_ENABLED_MAPPING[nm_enabled][nm_dlc]
         except KeyError:
             if nm_enabled not in [True, False]:

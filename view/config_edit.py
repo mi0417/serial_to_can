@@ -377,7 +377,7 @@ class ConfigEditWindow(QMainWindow):
                 msg_box.setWindowTitle("导入失败")
             msg_box.setText(import_log)
             msg_box.exec()
-        self.write_to_statusbar(f'{self.config_file_path}加载完成', success)
+        self.write_to_statusbar(f'{self.config_file_path}加载完成', not success)
 
 
     def _fill_ui_with_config(self, config):
@@ -482,8 +482,9 @@ class ConfigEditWindow(QMainWindow):
         nm_config = config.get(ValidValues.NM_CONFIG_SECTION, {})
         if nm_config != {}:
             # 检查 nm_enabled 是否存在，存在则更新界面
-            nm_enabled = nm_config.get(ValidValues.NM_ENABLED_KEY, 0)
-            if nm_enabled != 0:
+            nm_enabled = nm_config.get(ValidValues.NM_ENABLED_KEY, None)
+            logger.debug("nm_enabled: %s", nm_enabled)
+            if nm_enabled is not None:
                 self.ui.nmEnabledCheckBox.setChecked(nm_enabled)
             else:
                 fill_log += "未找到网络管理使能状态\n"
@@ -622,9 +623,16 @@ class ConfigEditWindow(QMainWindow):
         baudrate_text = self.ui.baudrateComboBox.currentText()
         baudrate = int(baudrate_text) if baudrate_text else 500
 
-        # 获取网络管理周期输入，若为空则使用默认值 -1
+        # 获取网络管理周期输入
         nm_period_text = self.ui.NMPeriodLineEdit.text()
-        nm_period = int(nm_period_text) if nm_period_text else 0
+        if not nm_period_text:
+            nm_period = 100
+            self.ui.NMPeriodLineEdit.setText("100")
+        else:
+            nm_period = int(nm_period_text)
+            if nm_period > 65535:
+                nm_period = 100
+                self.ui.NMPeriodLineEdit.setText("100")
         
         # 定义一个函数处理十六进制输入
         def handle_hex_input(text):
@@ -649,7 +657,7 @@ class ConfigEditWindow(QMainWindow):
                 'get_qi_status': handle_hex_input(self.ui.getQiStatusDIDlineEdit.text())
             },
             'nm_config': {
-                'nm_enabled': True,
+                'nm_enabled': self.ui.nmEnabledCheckBox.isChecked(),
                 'nm_DLC': self.ui.NMDLCcomboBox.currentIndex(),
                 'nm_id': handle_hex_input(self.ui.NMIDlineEdit.text()),
                 'nm_period': nm_period,
