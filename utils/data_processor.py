@@ -28,7 +28,7 @@ MAX_APP_DATA_LENGTH = 128   # APP业务数据体最大长度
 MAX_OTA_DATA_LENGTH = 4096  # OTA业务数据体最大长度
 KEY_STATUS_MIN_LENGTH = 10   # 密钥状态最小长度,通用did 4209内容长度10个字节, Byte0-4,5字节显示5个密钥状态, 第10个字节显示qi密钥下载状态
 KEY_STATUS_FAST_CHARGE_LENGTH = 5
-KEY_STATUS_QI_BYTE = 10
+KEY_STATUS_QI_BYTE = 11
 
 class ValidValues:
     '''
@@ -95,26 +95,6 @@ class ValidValues:
     # 提取 CAN 类型列表
     CAN_TYPES = list(CAN_TYPE_MAPPING.keys())
     '''0:CAN 1:CANFD 2:LIN 3:UART'''
-
-    # 定义 nm_enabled 转换映射
-    NM_ENABLED_MAPPING = {
-        False: {
-            0: b'\x00',
-            8: b'\x00',
-            15: b'\x00'
-        },
-        True: {
-            0: b'\x00',
-            8: b'\x10',
-            15: b'\x40'
-        }
-    }
-
-    # 生成反向映射
-    NM_ENABLED_MAPPING_REVERSE = {}
-    for enabled, dlc_dict in NM_ENABLED_MAPPING.items():
-        for dlc, byte_value in dlc_dict.items():
-            NM_ENABLED_MAPPING_REVERSE[byte_value] = (enabled, dlc)
 
     CAN_DLC_LENGTH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64]
 
@@ -309,7 +289,7 @@ class SerialMessage:
             enable_status = (byte & 0x10) == 0x10    # 提取 bit4
             key_status.append((download_status, enable_status))
 
-        # 提取第 10 个字节（索引为 9）
+        # 提取第 11 个字节（索引为 10）
         if len(self.data) > (KEY_STATUS_QI_BYTE - 1):
             byte = self.data[KEY_STATUS_QI_BYTE - 1]
             download_status = (byte & 0x01) == 0x01  # 提取 bit0
@@ -600,18 +580,16 @@ class ConfigParams:
         将 nm_enabled 转换为 byte。
 
         :param nm_enabled: 要转换的值，True 或 False
-        :param nm_dlc: 网络管理报文 DLC，8 或 15（代表 64 字节）
+        :param nm_dlc: 网络管理报文 DLC，范围在 ValidValues.CAN_DLC_LENGTH 内
         :return: 转换后的 byte 值
         """
-        try:
-            logger.debug('nm_enabled: %s, nm_dlc: %s', nm_enabled, nm_dlc)
-            return ValidValues.NM_ENABLED_MAPPING[nm_enabled][nm_dlc]
-        except KeyError:
-            if nm_enabled not in [True, False]:
-                logger.error('nm_enabled 值无效: %s', nm_enabled)
-            else:
-                logger.error('nm_enabled 为 %s 时，nm_dlc 值无效: %s', nm_enabled, nm_dlc)
+        if not nm_enabled:
+            return b'\x00'
+        if nm_dlc is None or nm_dlc not in ValidValues.CAN_DLC_LENGTH:
+            logger.error('nm_dlc 值无效: %s', nm_dlc)
             return None
+        # 将 nm_dlc 转换为单字节的 bytes 类型
+        return nm_dlc.to_bytes(1, byteorder='big')
 
     @staticmethod
     def convert_nm_message(nm_message_str, nm_dlc):
@@ -963,14 +941,22 @@ class ConfigParams:
         nm_enabled_bytes = data[ConfigParams.NM_ENABLED_START:ConfigParams.NM_ENABLED_START + ConfigParams.NM_ENABLED_LENGTH]
         # 将 bytearray 转换为 bytes 类型
         nm_enabled_byte = bytes(nm_enabled_bytes)
-        # 从反向映射中获取网络管理使能状态和 nm_dlc 值
-        result = ValidValues.NM_ENABLED_MAPPING_REVERSE.get(nm_enabled_byte)
-        if result:
-            nm_enabled, nm_dlc = result
+        
+        # 若字节为 b'\x00'，则 nm_enabled 为 False
+        if nm_enabled_byte == b'\x00':
+            nm_enabled = False
+            nm_dlc = 0  # 默认 dlc 为 0
             return nm_enabled, nm_dlc
-        else:
-            logger.error('未找到对应的网络管理使能状态映射，字节值: %s', utils.byte_array_to_hex_string(nm_enabled_byte))
-            return None, None
+
+        # 将 bytes 类型转换为 int 类型
+        nm_dlc_value = int.from_bytes(nm_enabled_byte, byteorder='big')
+        if nm_dlc_value in ValidValues.CAN_DLC_LENGTH:
+            nm_enabled = True
+            nm_dlc = nm_dlc_value
+            return nm_enabled, nm_dlc
+        
+        logger.error('未找到对应的网络管理使能状态映射，字节值: %s', utils.byte_array_to_hex_string(nm_enabled_byte))
+        return None, None
 
     @staticmethod
     def _extract_nm_id(data):
