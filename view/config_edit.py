@@ -28,6 +28,7 @@ class HexDelegate(QStyledItemDelegate):
         # 设置输入验证规则为两位十六进制数字
         validator = QRegularExpressionValidator(QRegularExpression(r'^[0-9A-Fa-f]{0,2}$'), editor)
         editor.setValidator(validator)
+        editor.setAlignment(Qt.AlignCenter)
         return editor
 
     def setEditorData(self, editor, index):
@@ -167,6 +168,13 @@ class ConfigEditWindow(QMainWindow):
         # 设置表格宽度占满窗口
         header = self.ui.NMDataTableWidget.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
+
+        # 为每个单元格设置居中对齐
+        for row in range(8):
+            for col in range(8):
+                item = QTableWidgetItem()
+                item.setTextAlignment(Qt.AlignCenter)  # 设置单元格内容居中对齐
+                self.ui.NMDataTableWidget.setItem(row, col, item)
 
     def update_table_editable(self, value):
         """根据 NMDLCcomboBox 的值更新表格的可编辑状态"""

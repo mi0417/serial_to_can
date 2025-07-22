@@ -523,6 +523,8 @@ class Ui_configEditWindow(object):
 
         self.retranslateUi(configEditWindow)
 
+        self.typeComboBox.setCurrentIndex(1)
+        self.baudrateComboBox.setCurrentIndex(4)
         self.NMDLCcomboBox.setCurrentIndex(15)
 
 
@@ -597,7 +599,7 @@ class Ui_configEditWindow(object):
         self.groupBox_5.setTitle("")
         self.readNMDataLineEdit.setInputMask("")
         self.readNMDataLineEdit.setText("")
-        self.readNMDataLineEdit.setPlaceholderText(QCoreApplication.translate("configEditWindow", u"\u7c98\u8d34\u62a5\u6587\u5230\u8fd9\u91cc\u8fdb\u884c\u8bc6\u522b", None))
+        self.readNMDataLineEdit.setPlaceholderText(QCoreApplication.translate("configEditWindow", u"\u590d\u5236\u62a5\u6587\u5230\u8fd9\u91cc\u8fdb\u884c\u8bc6\u522b", None))
         self.recognizeNMDataButton.setText(QCoreApplication.translate("configEditWindow", u"\u8bc6\u522b\u62a5\u6587", None))
         ___qtablewidgetitem = self.NMDataTableWidget.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("configEditWindow", u"0", None));

@@ -585,11 +585,11 @@ class ConfigParams:
         """
         if not nm_enabled:
             return b'\x00'
-        if nm_dlc is None or nm_dlc not in ValidValues.CAN_DLC_LENGTH:
+        if nm_dlc is None or nm_dlc >= len(ValidValues.CAN_DLC_LENGTH):
             logger.error('nm_dlc 值无效: %s', nm_dlc)
             return None
         # 将 nm_dlc 转换为单字节的 bytes 类型
-        return nm_dlc.to_bytes(1, byteorder='big')
+        return ValidValues.CAN_DLC_LENGTH[nm_dlc].to_bytes(1, byteorder='big')
 
     @staticmethod
     def convert_nm_message(nm_message_str, nm_dlc):
@@ -952,7 +952,7 @@ class ConfigParams:
         nm_dlc_value = int.from_bytes(nm_enabled_byte, byteorder='big')
         if nm_dlc_value in ValidValues.CAN_DLC_LENGTH:
             nm_enabled = True
-            nm_dlc = nm_dlc_value
+            nm_dlc = ValidValues.CAN_DLC_LENGTH.index(nm_dlc_value)
             return nm_enabled, nm_dlc
         
         logger.error('未找到对应的网络管理使能状态映射，字节值: %s', utils.byte_array_to_hex_string(nm_enabled_byte))
