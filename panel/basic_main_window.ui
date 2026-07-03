@@ -195,7 +195,7 @@
            </size>
           </property>
           <property name="title">
-           <string>设备配置</string>
+           <string>设备配置（鼠标悬停显示功能信息）</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
@@ -257,6 +257,16 @@
                </widget>
               </item>
               <item>
+               <widget class="QPushButton" name="inputFlashDriverButton">
+                <property name="toolTip">
+                 <string>仅矽力杰平台芯片使用，导入FlashDriver文件到黑盒子，若配置文件中无FlashDriver相关则无法配置成功</string>
+                </property>
+                <property name="text">
+                 <string>导入FlashDriver</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Horizontal</enum>
@@ -295,14 +305,61 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QPushButton" name="getKeyStatusButton">
-             <property name="toolTip">
-              <string>读取密钥状态</string>
-             </property>
-             <property name="text">
-              <string>获取密钥状态</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QPushButton" name="getKeyStatusButton">
+               <property name="toolTip">
+                <string>读取密钥状态</string>
+               </property>
+               <property name="text">
+                <string>获取密钥状态</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="getUIDButton">
+               <property name="toolTip">
+                <string>获取产品UID</string>
+               </property>
+               <property name="text">
+                <string>读UID</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="writeLuxQiButton">
+               <property name="toolTip">
+                <string>写立讯Qi密钥到产品，适用项目WPC068、WPC070……</string>
+               </property>
+               <property name="text">
+                <string>写立讯Qi</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="sendFlashDriverButton">
+               <property name="toolTip">
+                <string>从黑盒子下载FlashDriver到产品，仅支持矽力杰芯片产品</string>
+               </property>
+               <property name="text">
+                <string>下载FlashDriver</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QWidget" name="keyWidget" native="true">

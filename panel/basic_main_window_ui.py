@@ -137,6 +137,11 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_5.addWidget(self.getConfigButton)
 
+        self.inputFlashDriverButton = QPushButton(self.widget_3)
+        self.inputFlashDriverButton.setObjectName(u"inputFlashDriverButton")
+
+        self.horizontalLayout_5.addWidget(self.inputFlashDriverButton)
+
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_5.addItem(self.horizontalSpacer)
@@ -158,10 +163,34 @@ class Ui_MainWindow(object):
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.verticalLayout_3 = QVBoxLayout(self.groupBox_2)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.getKeyStatusButton = QPushButton(self.groupBox_2)
         self.getKeyStatusButton.setObjectName(u"getKeyStatusButton")
 
-        self.verticalLayout_3.addWidget(self.getKeyStatusButton)
+        self.horizontalLayout_2.addWidget(self.getKeyStatusButton)
+
+        self.getUIDButton = QPushButton(self.groupBox_2)
+        self.getUIDButton.setObjectName(u"getUIDButton")
+
+        self.horizontalLayout_2.addWidget(self.getUIDButton)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer_3)
+
+        self.writeLuxQiButton = QPushButton(self.groupBox_2)
+        self.writeLuxQiButton.setObjectName(u"writeLuxQiButton")
+
+        self.horizontalLayout_2.addWidget(self.writeLuxQiButton)
+
+        self.sendFlashDriverButton = QPushButton(self.groupBox_2)
+        self.sendFlashDriverButton.setObjectName(u"sendFlashDriverButton")
+
+        self.horizontalLayout_2.addWidget(self.sendFlashDriverButton)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
         self.keyWidget = QWidget(self.groupBox_2)
         self.keyWidget.setObjectName(u"keyWidget")
@@ -492,7 +521,7 @@ class Ui_MainWindow(object):
         self.editConfigBtn.setToolTip(QCoreApplication.translate("MainWindow", u"\u7f16\u8f91\u914d\u7f6e\u6587\u4ef6", None))
 #endif // QT_CONFIG(tooltip)
         self.editConfigBtn.setText("")
-        self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u8bbe\u5907\u914d\u7f6e", None))
+        self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u8bbe\u5907\u914d\u7f6e\uff08\u9f20\u6807\u60ac\u505c\u663e\u793a\u529f\u80fd\u4fe1\u606f\uff09", None))
 #if QT_CONFIG(tooltip)
         self.getSwVerButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u786c\u4ef6\u7248\u672c\u53f7", None))
 #endif // QT_CONFIG(tooltip)
@@ -510,6 +539,10 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.getConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u914d\u7f6e", None))
 #if QT_CONFIG(tooltip)
+        self.inputFlashDriverButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u4ec5\u77fd\u529b\u6770\u5e73\u53f0\u82af\u7247\u4f7f\u7528\uff0c\u5bfc\u5165FlashDriver\u6587\u4ef6\u5230\u9ed1\u76d2\u5b50\uff0c\u82e5\u914d\u7f6e\u6587\u4ef6\u4e2d\u65e0FlashDriver\u76f8\u5173\u5219\u65e0\u6cd5\u914d\u7f6e\u6210\u529f", None))
+#endif // QT_CONFIG(tooltip)
+        self.inputFlashDriverButton.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165FlashDriver", None))
+#if QT_CONFIG(tooltip)
         self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
 #endif // QT_CONFIG(tooltip)
         self.oneKeyButton.setText(QCoreApplication.translate("MainWindow", u"\u4e00\u952e\u914d\u7f6e", None))
@@ -518,6 +551,18 @@ class Ui_MainWindow(object):
         self.getKeyStatusButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u5bc6\u94a5\u72b6\u6001", None))
 #endif // QT_CONFIG(tooltip)
         self.getKeyStatusButton.setText(QCoreApplication.translate("MainWindow", u"\u83b7\u53d6\u5bc6\u94a5\u72b6\u6001", None))
+#if QT_CONFIG(tooltip)
+        self.getUIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u83b7\u53d6\u4ea7\u54c1UID", None))
+#endif // QT_CONFIG(tooltip)
+        self.getUIDButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfbUID", None))
+#if QT_CONFIG(tooltip)
+        self.writeLuxQiButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5199\u7acb\u8bafQi\u5bc6\u94a5\u5230\u4ea7\u54c1\uff0c\u9002\u7528\u9879\u76eeWPC068\u3001WPC070\u2026\u2026", None))
+#endif // QT_CONFIG(tooltip)
+        self.writeLuxQiButton.setText(QCoreApplication.translate("MainWindow", u"\u5199\u7acb\u8bafQi", None))
+#if QT_CONFIG(tooltip)
+        self.sendFlashDriverButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u4ece\u9ed1\u76d2\u5b50\u4e0b\u8f7dFlashDriver\u5230\u4ea7\u54c1\uff0c\u4ec5\u652f\u6301\u77fd\u529b\u6770\u82af\u7247\u4ea7\u54c1", None))
+#endif // QT_CONFIG(tooltip)
+        self.sendFlashDriverButton.setText(QCoreApplication.translate("MainWindow", u"\u4e0b\u8f7dFlashDriver", None))
         self.vivoLabel.setText("")
         self.xiaomiLabel.setText("")
         self.spaceLabel.setText("")

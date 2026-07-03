@@ -26,7 +26,7 @@ class Ui_configEditWindow(object):
     def setupUi(self, configEditWindow):
         if not configEditWindow.objectName():
             configEditWindow.setObjectName(u"configEditWindow")
-        configEditWindow.resize(550, 580)
+        configEditWindow.resize(550, 650)
         self.importAction = QAction(configEditWindow)
         self.importAction.setObjectName(u"importAction")
         icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
@@ -504,6 +504,28 @@ class Ui_configEditWindow(object):
 
         self.verticalLayout_3.addWidget(self.NMConfigGroupBox)
 
+        self.FlashDriverGroupBox = QGroupBox(self.centralwidget)
+        self.FlashDriverGroupBox.setObjectName(u"FlashDriverGroupBox")
+        self.horizontalLayout_5 = QHBoxLayout(self.FlashDriverGroupBox)
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label_3 = QLabel(self.FlashDriverGroupBox)
+        self.label_3.setObjectName(u"label_3")
+
+        self.horizontalLayout_5.addWidget(self.label_3)
+
+        self.FlashDriverNameLineEdit = QLineEdit(self.FlashDriverGroupBox)
+        self.FlashDriverNameLineEdit.setObjectName(u"FlashDriverNameLineEdit")
+
+        self.horizontalLayout_5.addWidget(self.FlashDriverNameLineEdit)
+
+        self.OpenFlashDriverPathButton = QPushButton(self.FlashDriverGroupBox)
+        self.OpenFlashDriverPathButton.setObjectName(u"OpenFlashDriverPathButton")
+
+        self.horizontalLayout_5.addWidget(self.OpenFlashDriverPathButton)
+
+
+        self.verticalLayout_3.addWidget(self.FlashDriverGroupBox)
+
         configEditWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(configEditWindow)
         self.menubar.setObjectName(u"menubar")
@@ -766,6 +788,9 @@ class Ui_configEditWindow(object):
         ___qtablewidgetitem79.setText(QCoreApplication.translate("configEditWindow", u"00", None));
         self.NMDataTableWidget.setSortingEnabled(__sortingEnabled)
 
+        self.FlashDriverGroupBox.setTitle(QCoreApplication.translate("configEditWindow", u"FlashDriver\uff08\u77fd\u529b\u6770\u82af\u7247\u534e\u4e3a\u8363\u8000key\u524d\u7f6e\u6761\u4ef6\uff09", None))
+        self.label_3.setText(QCoreApplication.translate("configEditWindow", u"\u6587\u4ef6\u540d", None))
+        self.OpenFlashDriverPathButton.setText(QCoreApplication.translate("configEditWindow", u"\u6253\u5f00\u8def\u5f84", None))
         self.menu.setTitle(QCoreApplication.translate("configEditWindow", u"\u9009\u9879", None))
     # retranslateUi
 

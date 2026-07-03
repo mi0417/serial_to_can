@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>580</height>
+    <height>650</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1076,6 +1076,32 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="FlashDriverGroupBox">
+      <property name="title">
+       <string>FlashDriver（矽力杰芯片华为荣耀key前置条件）</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>文件名</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="FlashDriverNameLineEdit"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="OpenFlashDriverPathButton">
+         <property name="text">
+          <string>打开路径</string>
+         </property>
         </widget>
        </item>
       </layout>

@@ -161,3 +161,21 @@ def update_toml_file(file_path, new_data):
     existing_data.update(new_data)
     write_toml_file(file_path, existing_data)
     logger.info('文件 %s 已成功更新。', file_path)
+    
+def parse_bin_file(file_path):
+    '''
+    解析二进制文件内容
+    :param file_path: 二进制文件的路径
+    :return: 文件内容的字节数组，如果文件不存在则返回空字节数组
+    '''
+    try:
+        with open(file_path, 'rb') as file:
+            return file.read()
+    except FileNotFoundError:
+        logger.error('二进制文件 %s 未找到。', file_path)
+        return b''
+    except Exception as e:
+        logger.error('读取二进制文件 %s 时发生错误: %s', file_path, str(e))
+        return b''
+    
+

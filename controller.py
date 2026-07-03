@@ -3,15 +3,16 @@ import time
 import logging
 import queue
 import serial
-from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable, QTimer
+from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable
+from PySide6.QtWidgets import QMessageBox
 
 from model import SerialModel
 from view.view import View
 
-from utils.data_processor import ConfigParams, ValidValues
+from utils.data_processor import ConfigParams
 from utils.file_utils import exe_absolute_path, is_file_exists
-from utils.common_data_utils import array_to_ascii, byte_array_to_hex_string, format_timestamp
-
+from utils.common_data_utils import byte_array_to_hex_string, format_timestamp
+from utils.flash_driver import get_file_path_from_config
 logger = logging.getLogger(__name__)
 
 class SerialCommunicationThread(QThread):
@@ -27,6 +28,10 @@ class SerialCommunicationThread(QThread):
     set_config_result_signal = Signal(bool, str)  # 自定义信号，用于传递配置结果给主线程
     read_config_result_signal = Signal(str, str)  # 自定义信号，用于传递读取配置结果给主线程
     get_key_status_result_signal = Signal(list, str)  # 自定义信号，用于传递获取密钥状态结果给主线程
+    input_flash_driver_result_signal = Signal(bool, str)  # 自定义信号，用于传递 FlashDriver 下载结果给主线程
+    get_uid_result_signal = Signal(str)  # (uid_str, error_msg) - uid_str为None表示失败
+    write_qi_key_result_signal = Signal(bool, str)  # (success, error_msg)
+    send_flash_driver_result_signal = Signal(bool, str)  # (success, error_msg)
 
     # 请求队列
     _request_queue = queue.Queue()
@@ -95,7 +100,7 @@ class SerialCommunicationThread(QThread):
                     # 仅在非主动请求时处理常规接收
                     if not self.model.expect_response:
                         # 接收数据（receive_data从串口接收数据，没有这一步log_data获取不到缓冲区数据），根据类型emit，无对应类型则输出信息
-                        message = self.model.receive_data()
+                        _ = self.model.receive_data()
                         # 定时获取日志缓冲区（ASCII格式）
                         log_data = self.model.get_realtime_logs()
                         if log_data:
@@ -260,6 +265,51 @@ class SerialCommunicationThread(QThread):
         #     self.get_key_status_result_signal.emit(result, '读取失败')
         # self.get_key_status_result_signal.emit(result, message)
 
+    def input_flash_driver(self, file_path):
+        '''
+        下载 FlashDriver 到黑盒子
+        :param file_path: FlashDriver bin 文件路径
+        '''
+        def _callback(result):
+            success, error_msg = result
+            if success:
+                self.input_flash_driver_result_signal.emit(True, None)
+            else:
+                self.input_flash_driver_result_signal.emit(False, error_msg)
+        
+        self._request_queue.put({
+            'method': 'input_flash_driver',
+            'args': [file_path],
+            'callback': _callback
+        })
+        
+    def get_uid(self):
+        '''
+        获取设备 UID
+        '''
+        def _callback(result):
+            if result:
+                self.get_uid_result_signal.emit(result)
+            else:
+                self.get_uid_result_signal.emit(self.EMIT_STR_ERROR)
+        self._request_queue.put({
+            'method': 'get_uid',
+            'callback': _callback
+        })
+                
+    def send_flash_driver(self):
+        '''
+        通知设备开始发送 FlashDriver
+        '''
+        def _callback(result):
+            self.send_flash_driver_result_signal.emit(result[0], result[1])
+
+        self._request_queue.put({
+            'method': 'send_flash_driver_start',
+            'callback': _callback
+        })
+        
+        
 
     # def receive_data(self):
 
@@ -305,7 +355,7 @@ class Controller(QObject):
         self.view = View(icon_path, window_title)
         self.view.controller = self
         self.setup_connections()
-        self.serial_thread = None  # 存储单个串口通信线程
+        self.serial_thread: SerialCommunicationThread = None  # 存储单个串口通信线程
         self.data_queue = queue.Queue()  # 用于存储接收到的数据
         self.one_key_config_running = False  # 用于跟踪一次配置过程是否正在运行
 
@@ -318,6 +368,10 @@ class Controller(QObject):
         self.view.ui.getConfigButton.clicked.connect(self.read_config_device)
         self.view.ui.oneKeyButton.clicked.connect(self.one_key_config)
         self.view.ui.getKeyStatusButton.clicked.connect(self.get_key_status)
+        self.view.ui.inputFlashDriverButton.clicked.connect(self.input_flash_driver)
+        self.view.ui.getUIDButton.clicked.connect(self.get_uid)
+        self.view.ui.writeLuxQiButton.clicked.connect(self.write_qi_key)
+        self.view.ui.sendFlashDriverButton.clicked.connect(self.send_flash_driver)
 
     def toggle_serial(self):
         port = self.view.ui.serialBox.currentText()
@@ -351,6 +405,12 @@ class Controller(QObject):
                 self.serial_thread.set_config_result_signal.connect(self.handle_set_config_result)
                 self.serial_thread.read_config_result_signal.connect(self.handle_read_config_result)
                 self.serial_thread.get_key_status_result_signal.connect(self.handle_get_key_status_result)
+                self.serial_thread.input_flash_driver_result_signal.connect(self.handle_input_flash_driver_result)
+                self.serial_thread.get_uid_result_signal.connect(self.handle_get_uid_result)
+                self.serial_thread.write_qi_key_result_signal.connect(self.handle_write_qi_key_result)
+                self.serial_thread.send_flash_driver_result_signal.connect(self.handle_send_flash_driver_result)
+                
+                self.model.data_discarded_signal.connect(self.on_data_discarded)
             self.serial_thread.restart(port_name)
             # 串口连接后，设置下拉框不可编辑
             self.view.ui.serialBox.setEnabled(False)
@@ -480,16 +540,20 @@ class Controller(QObject):
         :param result: 配置结果，True表示成功，False表示失败
         '''
         if result:
-            self.view.append_to_output_widget(f'配置成功', self.view.LOG_TYPE_INFO)
-            if not self.one_key_config_running:  # 检查是否正在进行一次配置
+            self.view.append_to_output_widget('配置成功', self.view.LOG_TYPE_INFO)
+            if not self.one_key_config_running:
                 self.view.enable_operation_buttons()
+                return
+            # 一键配置：配置成功后读取配置
+            self.serial_thread.read_config_device()
         else:
+            self.one_key_config_running = False
             if message == ConfigParams.PATH_ERROR:
                 self.view.append_to_output_widget(f'配置失败，找不到配置文件{self.serial_thread.toml_path}', self.view.LOG_TYPE_ERROR)
             elif message == ConfigParams.PARAM_NOT_FOUND_ERROR:
-                self.view.append_to_output_widget(f'配置失败，缺少配置参数', self.view.LOG_TYPE_ERROR)
+                self.view.append_to_output_widget('配置失败，缺少配置参数', self.view.LOG_TYPE_ERROR)
             elif message == ConfigParams.CONFIG_PARAMS_ERROR:
-                self.view.append_to_output_widget(f'配置失败，配置参数错误', self.view.LOG_TYPE_ERROR)
+                self.view.append_to_output_widget('配置失败，配置参数错误', self.view.LOG_TYPE_ERROR)
             else:
                 self.view.append_to_output_widget(f'配置失败，{message}', self.view.LOG_TYPE_ERROR)
             self.view.enable_operation_buttons()
@@ -514,16 +578,30 @@ class Controller(QObject):
         :param message: 错误信息
         '''
         if result:
-            self.view.append_to_output_widget(f'读取配置成功', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget('读取配置成功', self.view.LOG_TYPE_INFO)
             self.view.append_to_output_widget(f'配置信息\n{result}', self.view.LOG_TYPE_DATA)
+
+            if self.one_key_config_running:
+                # 一键配置流程：读取成功后检查是否需要下载 FlashDriver
+                flash_driver_path = get_file_path_from_config(self.view.config_path)
+                if flash_driver_path:
+                    self.view.append_to_output_widget('开始下载 FlashDriver...', self.view.LOG_TYPE_INFO)
+                    self.serial_thread.input_flash_driver(flash_driver_path)
+                    # FlashDriver 由 handle_input_flash_driver_result 恢复按钮
+                    return
+                else:
+                    self.view.append_to_output_widget('无需下载 FlashDriver', self.view.LOG_TYPE_INFO)
+
+            self.one_key_config_running = False
+            self.view.enable_operation_buttons()
         else:
             self.view.append_to_output_widget(f'读取配置失败, {message}', self.view.LOG_TYPE_ERROR)
-        self.one_key_config_running = False
-        self.view.enable_operation_buttons()
+            self.one_key_config_running = False
+            self.view.enable_operation_buttons()
 
     def one_key_config(self):
         '''
-        一键配置
+        一键配置：配置设备 → 读取配置 → 下载 FlashDriver（可选）→ 结束
         '''
         logger.info('点击一键配置按钮')
         check_config_file_result = self.check_config_file()
@@ -532,29 +610,23 @@ class Controller(QObject):
         if self.serial_thread and self.serial_thread.isRunning():
             self.one_key_config_running = True
             self.view.disable_operation_buttons()
-
             self.view.append_to_output_widget(self.view.ui.oneKeyButton.text(), self.view.LOG_TYPE_INFO)
-            
-            def after_config(result, message):
-                if result:
-                    self.serial_thread.read_config_device()
-                else:
-                    self.one_key_config_running = False
-                # 处理完成后断开信号连接
-                self.serial_thread.set_config_result_signal.disconnect(after_config_wrapper)
-
-        
-            # 包装器函数用于参数匹配
-            after_config_wrapper = lambda result, message: after_config(result, message)
-            
-            # 连接信号到中间层
-            self.serial_thread.set_config_result_signal.connect(after_config_wrapper)
-      
-            # 开始配置流程
             self.serial_thread.set_config_device(self.view.config_path)
-            # self.serial_thread.get_software_version()
-            # self.serial_thread.set_config_device(self.view.config_path)
-            # self.serial_thread.read_config_device()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def write_qi_key(self):
+        '''TODO 写入Qi密钥按钮点击处理'''
+        
+        if self.serial_thread and self.serial_thread.isRunning():
+            # TODO: 这里需要集成Qi API流程，先占位
+            self.view.append_to_log_edit(
+                '写Qi密钥功能正在开发中...',
+                type=View.LOG_SEND,
+                decode=View.HEX,
+            )
+            self.view.enable_operation_buttons()
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
@@ -571,6 +643,96 @@ class Controller(QObject):
         else:
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
+
+    def input_flash_driver(self):
+        '''
+        下载 FlashDriver 到黑盒子
+        '''
+        logger.info('点击导入 FlashDriver 按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            
+            # 获取 FlashDriver 文件路径，判断文件是否存在
+            flash_driver_path = get_file_path_from_config(self.view.config_path)
+            if not flash_driver_path:
+                self.view.append_to_output_widget(f'FlashDriver 文件“{flash_driver_path}”不存在', self.view.LOG_TYPE_ERROR)
+                return
+            
+            # TODO 传入flashdriver路径并进行整理
+            self.view.append_to_output_widget(f'开始导入 FlashDriver: {flash_driver_path}', self.view.LOG_TYPE_INFO)
+            self.view.disable_operation_buttons()
+            self.serial_thread.input_flash_driver(flash_driver_path)
+            
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def handle_input_flash_driver_result(self, success, error_msg):
+        '''
+        处理 FlashDriver 下载结果信号
+        :param success: 下载是否成功
+        :param error_msg: 错误信息
+        '''
+        if success:
+            self.view.append_to_output_widget('FlashDriver 下载成功', self.view.LOG_TYPE_INFO)
+        else:
+            self.view.append_to_output_widget(f'FlashDriver 下载失败: {error_msg}', self.view.LOG_TYPE_ERROR)
+
+        self.one_key_config_running = False
+        self.view.enable_operation_buttons()
+
+    def get_uid(self):
+        '''读取UID按钮点击处理'''
+        logger.info('点击读取UID按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.getUIDButton.text(), self.view.LOG_TYPE_INFO)
+            self.serial_thread.get_uid()
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def handle_get_uid_result(self, uid_str):
+        '''处理读取UID结果'''
+        self.view.enable_operation_buttons()
+        if uid_str:
+            self.view.append_to_output_widget(f'读取UID成功 {uid_str}', self.view.LOG_TYPE_DATA)
+        else:
+            self.view.append_to_output_widget(f'读取UID失败', self.view.LOG_TYPE_ERROR)
+
+    def send_flash_driver(self):
+        '''通知传输FlashDriver按钮点击处理'''
+        logger.info('点击下载FlashDriver按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.sendFlashDriverButton.text(), self.view.LOG_TYPE_INFO)
+            self.serial_thread.send_flash_driver()
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+        
+    def handle_send_flash_driver_result(self, success, error_msg):
+        '''处理通知传输FlashDriver结果'''
+        self.view.enable_operation_buttons()
+        if success:
+            self.view.append_to_output_widget(f'下载FlashDriver成功', self.view.LOG_TYPE_DATA)
+        else:
+            self.view.append_to_output_widget(f'下载FlashDriver失败: {error_msg}，检查是否导入FlashDriver或传输超时', self.view.LOG_TYPE_ERROR)
+
+    def handle_write_qi_key_result(self, success, error_msg):
+        '''处理写入Qi密钥结果'''
+        self.view.enable_operation_buttons()
+        if success:
+            self.view.append_to_log_edit(
+                '写入Qi密钥成功',
+                type=View.LOG_SEND,
+                decode=View.HEX,
+            )
+        else:
+            self.view.append_to_log_edit(
+                f'写入Qi密钥失败: {error_msg}',
+                type=View.LOG_SEND,
+                decode=View.HEX,
+            )
 
     def handle_get_key_status_result(self, key_status_list, message):
         '''
@@ -626,26 +788,23 @@ class Controller(QObject):
         :param type: 日志类型
         :param decode: 解码方式
         '''
-        # self.view.log_message(f'接收到数据：{data}', self.view.LOG_TYPE_DATA)
-        # 在这里对message进行处理
         log_time = None
-
         if decode == View.HEX:
             try:
-                log_time, message = log_message
-                processed_message = byte_array_to_hex_string(message)
-            except Exception as e:
-                logger.error(f'Hex编码失败: {e}')
-                processed_message = message
+                log_time, raw_data = log_message
+            except Exception:
+                raw_data = log_message
         else:
-            try:
-                processed_message = array_to_ascii(log_message)
-            except Exception as e:
-                logger.error(f'ASCII编码失败: {e}')
-                processed_message = message
+            raw_data = log_message
         
-        # 调用View的log_to_edit方法
-        self.view.append_to_log_edit(processed_message, log_time=log_time, type=type, decode=decode)
+        # 只传原始数据，解码和格式化都在 append_to_log_edit 里完成
+        self.view.append_to_log_edit(raw_data, log_time=log_time, type=type, decode=decode)
+
+    def on_data_discarded(self, discard_info):
+        if discard_info:
+            self.view.append_to_log_edit(discard_info['data'], log_time=discard_info['timestamp'], type=View.LOG_RECEIVE, decode=View.ABNORMAL_DATA, remark_info=discard_info['reason'])
+        else:
+            logger.warning('丢弃数据事件触发，但 discard_info 为 None')
 
     def show_view(self):
         self.view.show()

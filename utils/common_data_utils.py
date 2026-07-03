@@ -4,12 +4,43 @@
 import logging
 import datetime
 import re
+import struct
+from typing import Optional, Union
+from zlib import crc32
 
 logger = logging.getLogger(__name__)
 
-def hex_str_to_little_endian_array(hex_str, byte_count=0):
+def pack_uint16_le(value: int) -> bytes:
+    '''将 16 位无符号整数打包为小端序字节串。'''
+    if not isinstance(value, int):
+        raise TypeError(f'Expected int, got {type(value).__name__}')
+    return struct.pack('<H', value)
+
+
+def pack_uint32_le(value: int) -> bytes:
+    '''将 32 位无符号整数打包为小端序字节串。'''
+    if not isinstance(value, int):
+        raise TypeError(f'Expected int, got {type(value).__name__}')
+    return struct.pack('<I', value)
+
+
+def unpack_uint16_le(data: Union[bytes, bytearray]) -> int:
+    '''从小端序字节串中解析出 16 位无符号整数。'''
+    if not isinstance(data, (bytes, bytearray)):
+        raise TypeError(f'Expected bytes-like object, got {type(data).__name__}')
+    return struct.unpack('<H', bytes(data))[0]
+
+
+def unpack_uint32_le(data: Union[bytes, bytearray]) -> int:
+    '''从小端序字节串中解析出 32 位无符号整数。'''
+    if not isinstance(data, (bytes, bytearray)):
+        raise TypeError(f'Expected bytes-like object, got {type(data).__name__}')
+    return struct.unpack('<I', bytes(data))[0]
+
+
+def hex_str_to_little_endian_array(hex_str: str, byte_count: int = 0) -> Optional[bytes]:
     '''
-    将十六进制字符串转换为小端字节数组。
+    将十六进制字符串转换为“按小端序表示”的字节数组。
 
     Args:
         hex_str (str): 十六进制字符串，如 '12345678'
@@ -17,6 +48,11 @@ def hex_str_to_little_endian_array(hex_str, byte_count=0):
     Returns:
         bytes: 小端字节数组，如 b'\x78\x56\x34\x12'
     '''
+    if not isinstance(hex_str, str):
+        logger.error('Invalid hex string type: %s', type(hex_str).__name__)
+        return None
+
+    hex_str = hex_str.strip()
     # 移除可能存在的 '0x' 前缀
     if hex_str.startswith('0x'):
         hex_str = hex_str[2:]
@@ -74,7 +110,7 @@ def hex_str_to_byte_array(hex_str):
     
     return byte_array
 
-def little_endian_array_to_hex_str(byte_array):
+def little_endian_array_to_hex_str(byte_array: Union[bytes, bytearray]) -> Optional[str]:
     '''
     将小端字节数组转换为十六进制字符串。
 
@@ -95,7 +131,7 @@ def little_endian_array_to_hex_str(byte_array):
     hex_str = original_array.hex()
     return hex_str
 
-def ascii_to_little_endian_array(ascii_str):
+def ascii_to_little_endian_array(ascii_str: str) -> Optional[bytes]:
     '''
     将 ASCII 字符串转换为小端字节数组。
 
@@ -105,6 +141,9 @@ def ascii_to_little_endian_array(ascii_str):
     Returns:
         bytes: 小端字节数组
     '''
+    if not isinstance(ascii_str, str):
+        logger.error('Invalid ascii string type: %s', type(ascii_str).__name__)
+        return None
     try:
         byte_array = ascii_str.encode('ascii')
     except UnicodeEncodeError as e:
@@ -113,7 +152,7 @@ def ascii_to_little_endian_array(ascii_str):
     little_endian_array = byte_array[::-1]
     return little_endian_array
 
-def little_endian_array_to_ascii(byte_array):
+def little_endian_array_to_ascii(byte_array: Union[bytes, bytearray]) -> Optional[str]:
     '''
     将小端字节数组转换为 ASCII 字符串。
 
@@ -384,6 +423,13 @@ def split_hex_string_to_byte_array(input_string):
     except ValueError:
         logger.error('Invalid hex string: %s', input_string)
         return None
+
+def calc_crc32(data: bytes) -> int:
+    """
+    CRC32-IEEE校验
+    兼容旧版本
+    """
+    return crc32(data) & 0xFFFFFFFF
 
 class CommentParser:
     """处理Python代码中的注释，支持多行字符串

@@ -42,18 +42,39 @@ class ValidValues:
     COMMANDS_CONFIG_PARAMS      = b'\x00\x02'     # 命令 00 02：参数配置
     COMMANDS_READ_PARAMS        = b'\x00\x03'     # 命令 00 03：参数读取
     COMMANDS_GET_KEY_STATUS     = b'\x00\x04'     # 命令 00 04：获取密钥状态
+    COMMANDS_READ_UID           = b'\x00\x05'     # 命令 00 05：读UID
+    COMMANDS_WRITE_QI_KEY       = b'\x00\x06'     # 命令 00 06：写Qi密钥
+    COMMANDS_SEND_FLASH_DRIVER  = b'\x00\x07'     # 命令 00 07：通知传输FlashDriver
     COMMANDS_RESET              = b'\x01\x01'     # 命令 01 01：复位
+    # 导入 FlashDriver 命令
+    COMMANDS_FLASH_START        = b'\x02\x01'     # 命令 02 01：FlashDriver 启动传输
+    COMMANDS_FLASH_DATA         = b'\x02\x02'     # 命令 02 02：FlashDriver 数据传输
+    COMMANDS_FLASH_END          = b'\x02\x03'     # 命令 02 03：FlashDriver 结束与总校验
     DATA_EMPTY = b''     # 数据体为空
     END_SYMBOL = b'\x0D\x0A'     # 结束符为：\r\n，转16进制为：0x0D 0x0A
 
     RESET_SUCCESS_DATA = b'\x00\x00'     # 复位成功数据
     CONFIG_SUCCESS_DATA = b'\x00\x00'     # 参数配置成功数据
     FAIL_DATA     = b'\xFF\xFF'     # 失败数据
+    
+    # TODO 导入FlashDriver指令失败的异常码未定义和解析
 
     # 定义消息头、数据类型、命令和结束符的集合
     HEADERS = [HEADER_LUX]     # 数据头固定为：“Lux”
     DATA_TYPES = [DATA_TYPE_REQUEST, DATA_TYPE_RESPONSE] # 数据类型 00：表示请求，01：表示应答
-    COMMANDS = [COMMANDS_READ_SW_VERSION, COMMANDS_CONFIG_PARAMS, COMMANDS_READ_PARAMS, COMMANDS_GET_KEY_STATUS, COMMANDS_RESET]   # 命令 00 01：读软件版本号，00 02：参数配置，00 03：参数读取，00 04：获取密钥状态，01 01：复位
+    COMMANDS = [
+        COMMANDS_READ_SW_VERSION,
+        COMMANDS_CONFIG_PARAMS,
+        COMMANDS_READ_PARAMS,
+        COMMANDS_GET_KEY_STATUS,
+        COMMANDS_READ_UID,
+        COMMANDS_WRITE_QI_KEY,
+        COMMANDS_SEND_FLASH_DRIVER,
+        COMMANDS_RESET,
+        COMMANDS_FLASH_START,
+        COMMANDS_FLASH_DATA,
+        COMMANDS_FLASH_END,
+    ]
     END_SYMBOLS = [END_SYMBOL]     # 结束符为：\r\n，转16进制为：0x0D 0x0A
 
     # 定义 CAN 配置常量
@@ -81,6 +102,10 @@ class ValidValues:
     NM_ID_KEY = 'nm_id'
     NM_PERIOD_KEY = 'nm_period'
     NM_MESSAGE_KEY = 'nm_message'
+
+    # 定义FlashDriver配置常量
+    FLASH_DRIVER_SECTION = 'FlashDriver'
+    FLASH_DRIVER_NAME_KEY = 'FlashDriver_name'
     
     # 定义通信类型到数值的映射
     CAN_TYPE_MAPPING = {
@@ -97,6 +122,8 @@ class ValidValues:
     '''0:CAN 1:CANFD 2:LIN 3:UART'''
 
     CAN_DLC_LENGTH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64]
+    
+    MAX_APP_DATA_LENGTH = 128   # APP业务数据体最大长度
 
 class SerialMessage:
     '''
@@ -376,6 +403,18 @@ class SerialMessage:
                 command_str = '获取密钥状态'
             case ValidValues.COMMANDS_RESET:
                 command_str = '复位'
+            case ValidValues.COMMANDS_READ_UID:
+                command_str = '读取UID'
+            case ValidValues.COMMANDS_WRITE_QI_KEY:
+                command_str = '写Qi密钥'
+            case ValidValues.COMMANDS_SEND_FLASH_DRIVER:
+                command_str = '下载FlashDriver'
+            case ValidValues.COMMANDS_FLASH_START:
+                command_str = 'FlashDriver 导入开始'
+            case ValidValues.COMMANDS_FLASH_DATA:
+                command_str = 'FlashDriver 导入数据'
+            case ValidValues.COMMANDS_FLASH_END:
+                command_str = 'FlashDriver 导入校验'
             case _:
                 command_str = '未知命令'
         if self.full_data is None:

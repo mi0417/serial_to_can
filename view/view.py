@@ -18,8 +18,10 @@ from panel.basic_main_window_ui import Ui_MainWindow
 from .config_edit import ConfigEditWindow
 
 from utils.serial_handle import SerialOperator
-from utils.file_utils import exe_absolute_path, read_file
+from utils.file_utils import exe_absolute_path, read_file, is_file_exists
+from utils.flash_driver import get_file_path_from_config
 from utils.data_processor import ValidValues
+from utils.common_data_utils import byte_array_to_hex_string, array_to_ascii
 
 logger = logging.getLogger(__name__)
 class MyComboBox(QComboBox):
@@ -256,6 +258,8 @@ class View(QMainWindow):
 
     ASCII = 'ASCII'
     HEX = 'Hex'
+    OTHER_DATA = 'Other'
+    ABNORMAL_DATA = 'Abnormal'
 
     MAX_LOG_ITEMS = 500  # 设定最大日志项数
     def __init__(self, icon_path = None, window_title = None, open_config_edit=False, config_edit_qss=None):
@@ -270,6 +274,7 @@ class View(QMainWindow):
             self.setWindowTitle(window_title)
         self.init_UI()
         self.config_path = None
+        self.flash_driver_path = None  # FlashDriver 文件路径
         self.auto_scroll = True
         self.load_last_config()  # 初始化加载
         self.config_edit_window = None  # 新增属性，用于跟踪 config_edit 窗口
@@ -294,7 +299,7 @@ class View(QMainWindow):
         self.ui.serialBox = self.replace_combo_box(self.ui.serialBox, self)
         self.ui.logEdit = self.replace_text_edit(self.ui.logEdit, self)
 
-        # 连接按钮信号
+        # 连接按钮信号，主要为界面操作
         self.ui.serialBox.currentIndexChanged.connect(lambda: self.show_selected_combobox(self.ui.serialBox))
         self.ui.selectConfigBtn.clicked.connect(self.handle_select_config)
         self.ui.clearLogBtn.clicked.connect(self.clear_log)
@@ -415,15 +420,23 @@ class View(QMainWindow):
         self.ui.getConfigButton.setEnabled(False)
         self.ui.oneKeyButton.setEnabled(False)
         self.ui.getKeyStatusButton.setEnabled(False)
+        self.ui.inputFlashDriverButton.setEnabled(False)
+        self.ui.getUIDButton.setEnabled(False)
+        self.ui.writeLuxQiButton.setEnabled(False)
+        self.ui.sendFlashDriverButton.setEnabled(False)
 
     def enable_operation_buttons(self):
-        """启用所有功能操作按钮""" 
+        """启用所有功能操作按钮"""
         self.ui.getSwVerButton.setEnabled(True)
         self.ui.resetButton.setEnabled(True)
         self.ui.setConfigButton.setEnabled(True)
         self.ui.getConfigButton.setEnabled(True)
         self.ui.oneKeyButton.setEnabled(True)
         self.ui.getKeyStatusButton.setEnabled(True)
+        self.ui.inputFlashDriverButton.setEnabled(True)
+        self.ui.getUIDButton.setEnabled(True)
+        self.ui.writeLuxQiButton.setEnabled(True)
+        self.ui.sendFlashDriverButton.setEnabled(True)
 
     def handle_change_page(self):
         """处理页面切换按钮点击事件"""
@@ -496,11 +509,13 @@ class View(QMainWindow):
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         log_message = f'{current_time} - {message}'
         item = QListWidgetItem(str(log_message))
-        match log_type:
-            case self.LOG_TYPE_INFO:
-                item.setForeground(QColor(self.COLOR_GRAY))
-            case self.LOG_TYPE_ERROR:
-                item.setForeground(QColor(self.COLOR_RED))
+        # 使用 if-elif 结构代替 match-case 以避免 Pylint 警告
+        if log_type == self.LOG_TYPE_INFO:
+            item.setForeground(QColor(self.COLOR_GRAY))
+        elif log_type == self.LOG_TYPE_ERROR:
+            item.setForeground(QColor(self.COLOR_RED))
+        elif log_type == self.LOG_TYPE_WARNING:
+            item.setForeground(QColor(self.COLOR_YELLOW))
 
         output_widget.addItem(item)
         output_widget.scrollToBottom()
@@ -513,7 +528,7 @@ class View(QMainWindow):
             self.ui.logEdit.verticalScrollBar().maximum() + 20
         )
 
-    def append_to_log_edit(self, message, log_time=None, type=LOG_RECEIVE, decode=ASCII):
+    def append_to_log_edit(self, message, log_time=None, type=LOG_RECEIVE, decode=ASCII, remark_info=None):
         '''
         向logEdit添加日志信息，并滚动到最下方。
 
@@ -525,23 +540,46 @@ class View(QMainWindow):
             return
             
         if log_time:
-            current_time = log_time
+            try:
+                # 尝试将 log_time 转换为 datetime 对象
+                if isinstance(log_time, (int, float)):
+                    current_time = datetime.fromtimestamp(log_time).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+                else:
+                    current_time = log_time
+            except Exception as e:
+                current_time = log_time
         else:
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
-        time_style = f'color: {self.COLOR_GRAY};'  # 浅灰色时间样式
-        if type and decode:
+        gray_style = f'color: {self.COLOR_GRAY};'
+        time_str = f'<span style="{gray_style}">{current_time}</span>'  # 浅灰色时间样式
+        
+        if type:
             # 添加方向箭头符号  
             direction = ' &gt;&gt;' if type == self.LOG_SEND else ' &lt;&lt;'
-            log_message = f'<span style="{time_style}">{current_time}</span> - {decode} - {type}{direction}\n{message}'
+            
+        try:
+            hex_str = byte_array_to_hex_string(message)
+        except Exception as e:
+            logger.error(f'Hex编码失败: {e}')
+            hex_str = message
+            
+        if decode == self.ABNORMAL_DATA:
+            log_message = f'{time_str} - {type}{direction}{remark_info}\n({self.HEX}){hex_str}'
+        elif decode == self.HEX:
+             log_message = f'{time_str} - {type}{direction}\n<span style="{gray_style}">({self.HEX})</span>{hex_str}'
+        elif decode == self.ASCII:
+            try:
+                ascii_str = array_to_ascii(message)
+            except Exception as e:
+                logger.error(f'ASCII编码失败: {e}')
+                ascii_str = 'ASCII编码失败'
+            log_message = f'{time_str} - {type}{direction}<span style="{gray_style}">({self.ASCII})</span>{ascii_str}\n<span style="{gray_style}">({self.HEX})</span>{hex_str}'
         else:
-            log_message = f'<span style="{time_style}">{current_time}</span> - {message}'
+            log_message = f'{time_str} - {message}'
 
         # 使用信号槽机制确保线程安全
         self.ui.logEdit.append_text(f'{log_message}')
-        # QMetaObject.invokeMethod(self.ui.logEdit, 'insertPlainText', 
-        #                        Qt.ConnectionType.QueuedConnection, 
-        #                        Q_ARG(str, f'\n{log_message}'))
         logger.debug('log: %s', message)
 
     def log(self, message, log_type=LOG_TYPE_INFO, write_to_output=True, write_to_logedit=True):
@@ -580,7 +618,49 @@ class View(QMainWindow):
             self.ui.configFilePathEdit.setText(file_path)
             self.handle_input_config()
 
+    """
+    def handle_select_flash_driver(self):
+        '''
+        处理选择 FlashDriver 文件按钮点击事件
+        无此功能
+        '''
+        # 获取当前路径
+        current_path = self.flash_driver_path or ''
+        dir_path = os.path.dirname(current_path) if current_path and os.path.exists(current_path) else ''
+        
+        # 打开文件选择对话框
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, '选择 FlashDriver 文件', dir_path, 'BIN 文件 (*.bin);;所有文件 (*)')
+            
+        if file_path:
+            self.flash_driver_path = file_path
+            self.append_to_output_widget(f'已选择 FlashDriver 文件: {file_path}', LOG_TYPE_INFO)
     
+    def handle_input_flash_driver(self):
+        '''
+        处理导入 FlashDriver 文件路径按钮点击事件
+        '''
+        # TODO：调用controller中的方法导入FlashDriver
+
+    def get_flash_driver_path(self):
+        '''
+        获取 FlashDriver 文件路径
+        :return: FlashDriver 文件路径，如果未设置则返回 None
+        '''
+        # 如果已有完整路径直接返回
+        if self.flash_driver_path and is_file_exists(self.flash_driver_path):
+            return self.flash_driver_path
+
+        # 通过 flash_driver 模块从配置文件解析路径
+        full_path = get_file_path_from_config(self.config_path)
+
+        if full_path:
+            self.flash_driver_path = full_path
+            return full_path
+
+        return None
+    """
+
     def clear_log(self):
         '''
         清空日志

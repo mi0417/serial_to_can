@@ -12,7 +12,7 @@ from PySide6.QtGui import QIcon, QRegularExpressionValidator, QShortcut, QKeySeq
 from PySide6.QtCore import Signal, Qt, QRegularExpression
 
 from panel.config_edit_ui import Ui_configEditWindow
-from utils.file_utils import resource_path, read_toml_file
+from utils.file_utils import resource_path, read_toml_file, get_exe_dir
 from utils.common_data_utils import split_hex_string, int_to_hex_string
 from utils.data_processor import ValidValues
 
@@ -325,6 +325,15 @@ class ConfigEditWindow(QMainWindow):
         self.ui.importAction.triggered.connect(self.import_config)
         self.ui.saveAction.triggered.connect(self.save_config)
         self.ui.saveAsAction.triggered.connect(self.save_as_config)
+        self.ui.OpenFlashDriverPathButton.clicked.connect(self.open_flash_driver_path)
+
+    def open_flash_driver_path(self):
+        """打开 FlashDriver 目录"""
+        flash_driver_dir = os.path.join(get_exe_dir(), ValidValues.FLASH_DRIVER_SECTION)
+        if not os.path.exists(flash_driver_dir):
+            os.makedirs(flash_driver_dir)
+        # 使用系统文件管理器打开目录
+        os.startfile(flash_driver_dir)
 
     def import_config(self):
         """点击导入键导入配置文件"""
@@ -413,7 +422,7 @@ class ConfigEditWindow(QMainWindow):
                 else:
                     fill_log += f"未找到匹配的 CAN 类型: {can_config.get(ValidValues.CAN_TYPE_KEY, ValidValues.CAN_TYPES[0])}\n"
 
-            baudrate = can_config.get('baudrate', 0)
+            baudrate = can_config.get(ValidValues.BAUDRATE_KEY, 0)
             if baudrate != 0:
                 baudrate_index = self.ui.typeComboBox.findText(str(baudrate))
                 if baudrate_index != -1:
@@ -524,6 +533,13 @@ class ConfigEditWindow(QMainWindow):
         else:
             fill_log += "未找到网络管理配置\n"
 
+        # 填充 FlashDriver 配置（如果存在）
+        flash_driver_config = config.get(ValidValues.FLASH_DRIVER_SECTION, {})
+        if flash_driver_config:
+            flash_driver_name = flash_driver_config.get(ValidValues.FLASH_DRIVER_NAME_KEY, '')
+            self.ui.FlashDriverNameLineEdit.setText(flash_driver_name)
+        # 如果不存在 FlashDriver 配置，也不报错，保持界面原样
+
         logger.debug("填充配置到界面完成，日志信息: %s", fill_log)
         return fill_log
             
@@ -562,30 +578,32 @@ class ConfigEditWindow(QMainWindow):
 
         # 定义各配置项对应的注释
         section_comments = {
-            "CAN_config": "# 配置 CAN 通信相关参数",
-            "diag_did": "# 配置诊断 DID 相关参数",
-            "Qi_certificate": "# 配置 Qi 证书相关参数",
-            "nm_config": "# 配置网络管理相关参数"
+            ValidValues.CAN_CONFIG_SECTION: "# 配置 CAN 通信相关参数",
+            ValidValues.DIAG_DID_SECTION: "# 配置诊断 DID 相关参数",
+            ValidValues.QI_CERTIFICATE_SECTION: "# 配置 Qi 证书相关参数",
+            ValidValues.NM_CONFIG_SECTION: "# 配置网络管理相关参数",
+            ValidValues.FLASH_DRIVER_SECTION: "# 配置 FlashDriver 相关参数"
         }
         key_comments = {
-            "type": "  # 通信类型 CAN/CANFD/LIN/Uart",
-            "baudrate": "  # 波特率    CAN默认500K（baudrate = 500）CANFD默认2M（baudrate = 2000）LIN默认19200（baudrate = 19200）UART无默认，设置115200即baudrate = 115200",
-            "request_id": "  # 诊断请求ID  目前只支持11-Bit ID",
-            "response_id": "  # 诊断响应ID 目前只支持11-Bit ID",
-            "get_key_status": " # 获取秘钥状态DID",
-            "read_write_key": " # 读写DID",
-            "qi_transmit_id": "  # 新增 Qi证书下载:透传发送id",
-            "qi_receive_id": " # 新增 Qi证书下载:透传接收id",
-            "get_qi_status": "  # 新增 获取Qi秘钥状态DID",
-            "nm_enabled": "  # 使能网络管理报文 false不使能/true使能",
-            "nm_DLC": "  # 网络管理报文DLC，8为8字节，15为64字节",
-            "nm_id": "  # 网络管理报文ID 目前只支持11-Bit ID",
-            "nm_period": "  # 网络管理报文周期 单位ms",
-            "nm_message": '# 网络管理报文 64Byte十六进制字符串，小于10前面补0'
+            ValidValues.CAN_TYPE_KEY: "  # 通信类型 CAN/CANFD/LIN/Uart",
+            ValidValues.BAUDRATE_KEY: "  # 波特率    CAN默认500K（baudrate = 500）CANFD默认2M（baudrate = 2000）LIN默认19200（baudrate = 19200）UART无默认，设置115200即baudrate = 115200",
+            ValidValues.REQUEST_ID_KEY: "  # 诊断请求ID  目前只支持11-Bit ID",
+            ValidValues.RESPONSE_ID_KEY: "  # 诊断响应ID 目前只支持11-Bit ID",
+            ValidValues.GET_KEY_STATUS_KEY: " # 获取秘钥状态DID",
+            ValidValues.READ_WRITE_KEY_KEY: " # 读写DID",
+            ValidValues.QI_TRANSMIT_ID_KEY: "  # 新增 Qi证书下载:透传发送id",
+            ValidValues.QI_RECEIVE_ID_KEY: " # 新增 Qi证书下载:透传接收id",
+            ValidValues.GET_QI_STATUS_KEY: "  # 新增 获取Qi秘钥状态DID",
+            ValidValues.NM_ENABLED_KEY: "  # 使能网络管理报文 false不使能/true使能",
+            ValidValues.NM_DLC_KEY: "  # 网络管理报文DLC，8为8字节，15为64字节",
+            ValidValues.NM_ID_KEY: "  # 网络管理报文ID 目前只支持11-Bit ID",
+            ValidValues.NM_PERIOD_KEY: "  # 网络管理报文周期 单位ms",
+            ValidValues.NM_MESSAGE_KEY: '# 网络管理报文 64Byte十六进制字符串，小于10前面补0',
+            ValidValues.FLASH_DRIVER_NAME_KEY: "  # FlashDriver文件名称"
         }
         
         # 指定需要移除引号的 key
-        keys_to_remove_quotes = ["request_id", "response_id", "get_key_status", "read_write_key", "qi_transmit_id", "qi_receive_id", "get_qi_status", "nm_id"]
+        keys_to_remove_quotes = [ValidValues.REQUEST_ID_KEY, ValidValues.RESPONSE_ID_KEY, ValidValues.GET_KEY_STATUS_KEY, ValidValues.READ_WRITE_KEY_KEY, ValidValues.QI_TRANSMIT_ID_KEY, ValidValues.QI_RECEIVE_ID_KEY, ValidValues.GET_QI_STATUS_KEY, ValidValues.NM_ID_KEY]
 
         def remove_quotes(line, key):
             if key in keys_to_remove_quotes:
@@ -608,9 +626,9 @@ class ConfigEditWindow(QMainWindow):
                 key = line.split("=")[0].strip()
                 line = remove_quotes(line, key)  # 调用函数移除引号
                 if key in key_comments:
-                    if key == "nm_message":
+                    if key == ValidValues.NM_MESSAGE_KEY:
                         # 处理多行字符串的情况
-                        nm_message = config['nm_config']['nm_message']
+                        nm_message = config[ValidValues.NM_CONFIG_SECTION][ValidValues.NM_MESSAGE_KEY]
                         updated_lines.append(f'{key} = """')
                         updated_lines.extend(nm_message.split('\n'))
                         updated_lines.append('"""')
@@ -649,27 +667,30 @@ class ConfigEditWindow(QMainWindow):
             return text
         
         config = {
-            'CAN_config': {
-                'type': self.ui.typeComboBox.currentText(),
-                'baudrate': baudrate,
-                'request_id': handle_hex_input(self.ui.requestIDlineEdit.text()),
-                'response_id': handle_hex_input(self.ui.responseIDlineEdit.text())
+            ValidValues.CAN_CONFIG_SECTION: {
+                ValidValues.CAN_TYPE_KEY: self.ui.typeComboBox.currentText(),
+                ValidValues.BAUDRATE_KEY: baudrate,
+                ValidValues.REQUEST_ID_KEY: handle_hex_input(self.ui.requestIDlineEdit.text()),
+                ValidValues.RESPONSE_ID_KEY: handle_hex_input(self.ui.responseIDlineEdit.text())
             },
-            'diag_did': {
-                'get_key_status': handle_hex_input(self.ui.getKeyStatusDIDlineEdit.text()),
-                'read_write_key': handle_hex_input(self.ui.readWriteKeyDIDlineEdit.text())
+            ValidValues.DIAG_DID_SECTION: {
+                ValidValues.GET_KEY_STATUS_KEY: handle_hex_input(self.ui.getKeyStatusDIDlineEdit.text()),
+                ValidValues.READ_WRITE_KEY_KEY: handle_hex_input(self.ui.readWriteKeyDIDlineEdit.text())
             },
-            'Qi_certificate': {
-                'qi_transmit_id': handle_hex_input(self.ui.qiTransmitIDlineEdit.text()),
-                'qi_receive_id': handle_hex_input(self.ui.qiReceiveIDlineEdit.text()),
-                'get_qi_status': handle_hex_input(self.ui.getQiStatusDIDlineEdit.text())
+            ValidValues.QI_CERTIFICATE_SECTION: {
+                ValidValues.QI_TRANSMIT_ID_KEY: handle_hex_input(self.ui.qiTransmitIDlineEdit.text()),
+                ValidValues.QI_RECEIVE_ID_KEY: handle_hex_input(self.ui.qiReceiveIDlineEdit.text()),
+                ValidValues.GET_QI_STATUS_KEY: handle_hex_input(self.ui.getQiStatusDIDlineEdit.text())
             },
-            'nm_config': {
-                'nm_enabled': self.ui.nmEnabledCheckBox.isChecked(),
-                'nm_DLC': self.ui.NMDLCcomboBox.currentIndex(),
-                'nm_id': handle_hex_input(self.ui.NMIDlineEdit.text()),
-                'nm_period': nm_period,
-                'nm_message': self._get_nm_message_from_table()
+            ValidValues.NM_CONFIG_SECTION: {
+                ValidValues.NM_ENABLED_KEY: self.ui.nmEnabledCheckBox.isChecked(),
+                ValidValues.NM_DLC_KEY: self.ui.NMDLCcomboBox.currentIndex(),
+                ValidValues.NM_ID_KEY: handle_hex_input(self.ui.NMIDlineEdit.text()),
+                ValidValues.NM_PERIOD_KEY: nm_period,
+                ValidValues.NM_MESSAGE_KEY: self._get_nm_message_from_table()
+            },
+            ValidValues.FLASH_DRIVER_SECTION: {
+                ValidValues.FLASH_DRIVER_NAME_KEY: self.ui.FlashDriverNameLineEdit.text()
             }
         }
         return config

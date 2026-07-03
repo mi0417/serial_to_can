@@ -11,3 +11,12 @@ pyinstaller serial_to_can_setup_temp.spec
 
 换行
 Alt+Z
+
+# 基础命令
+pyside6-uic main.ui -o ui_main.py
+
+# 推荐参数 --from-imports：自动生成资源导入代码（搭配qrc编译文件）
+pyside6-uic main.ui -o ui_main.py --from-imports
+
+# 生成资源文件
+pyside6-rcc res.qrc -o res_rc.py

@@ -1,0 +1,15 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python.analysis.extraPaths": ["${workspaceFolder}"],
+    // 屏蔽动态属性找不到（你c.b飘红的根源）
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingAttribute": "none",
+        // PyQt动态类成员误报
+        "reportMissingModuleSource": "none",
+        "reportUnknownMemberType": "none",
+        // 命名空间包无__init__导入警告
+        "reportMissingImports": "warning"
+    },
+    // 降低分析严格度，适配老旧无注解项目
+    "python.analysis.typeCheckingMode": "off"
+}
