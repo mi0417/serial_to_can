@@ -1,10 +1,13 @@
-
+'''
+控制器类
+屎山代码重灾区
+'''
 import time
 import logging
 import queue
 import serial
 from PySide6.QtCore import QObject, Signal, QThread, QThreadPool, QRunnable
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QDialog
 
 from model import SerialModel
 from view.view import View
@@ -29,7 +32,7 @@ class SerialCommunicationThread(QThread):
     read_config_result_signal = Signal(str, str)  # 自定义信号，用于传递读取配置结果给主线程
     get_key_status_result_signal = Signal(list, str)  # 自定义信号，用于传递获取密钥状态结果给主线程
     input_flash_driver_result_signal = Signal(bool, str)  # 自定义信号，用于传递 FlashDriver 下载结果给主线程
-    get_uid_result_signal = Signal(str)  # (uid_str, error_msg) - uid_str为None表示失败
+    get_uid_result_signal = Signal(bytearray)  # (uid_str, error_msg) - uid_str为None表示失败
     write_qi_key_result_signal = Signal(bool, str)  # (success, error_msg)
     send_flash_driver_result_signal = Signal(bool, str)  # (success, error_msg)
 
@@ -289,7 +292,7 @@ class SerialCommunicationThread(QThread):
         '''
         def _callback(result):
             if result:
-                self.get_uid_result_signal.emit(result)
+                self.get_uid_result_signal.emit(byte_array_to_hex_string(result))
             else:
                 self.get_uid_result_signal.emit(self.EMIT_STR_ERROR)
         self._request_queue.put({
@@ -306,6 +309,33 @@ class SerialCommunicationThread(QThread):
 
         self._request_queue.put({
             'method': 'send_flash_driver_start',
+            'callback': _callback
+        })
+
+    def write_qi_key(self, key: str):
+        '''
+        写入 Qi 密钥到设备
+
+        Args:
+            key: 从服务器获取的加密密钥
+        '''
+        # 连接 model 的进度信号到 thread 的信号
+        #self.model.write_qi_key_progress_signal.connect(self.write_qi_key_progress_signal.emit)
+
+        def _callback(result):
+            # 完成后断开信号连接 ? 为啥？
+            # try:
+            #     self.model.write_qi_key_progress_signal.disconnect(self.write_qi_key_progress_signal.emit)
+            # except Exception:
+            #     pass
+            if result:
+                self.write_qi_key_result_signal.emit(True, '')
+            else:
+                self.write_qi_key_result_signal.emit(False, '设备无响应')
+
+        self._request_queue.put({
+            'method': 'write_qi_key',
+            'args': [key],
             'callback': _callback
         })
         
@@ -358,6 +388,7 @@ class Controller(QObject):
         self.serial_thread: SerialCommunicationThread = None  # 存储单个串口通信线程
         self.data_queue = queue.Queue()  # 用于存储接收到的数据
         self.one_key_config_running = False  # 用于跟踪一次配置过程是否正在运行
+        self._write_qi_key_uid_callback = None  # 写Qi密钥流程UID回调标志
 
     def setup_connections(self):
         # 这里可以设置用户交互的连接，例如按钮点击事件
@@ -616,21 +647,6 @@ class Controller(QObject):
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
 
-    def write_qi_key(self):
-        '''TODO 写入Qi密钥按钮点击处理'''
-        
-        if self.serial_thread and self.serial_thread.isRunning():
-            # TODO: 这里需要集成Qi API流程，先占位
-            self.view.append_to_log_edit(
-                '写Qi密钥功能正在开发中...',
-                type=View.LOG_SEND,
-                decode=View.HEX,
-            )
-            self.view.enable_operation_buttons()
-        else:
-            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
-            logger.error('串口未打开')
-
     def get_key_status(self):
         '''
         获取密钥状态
@@ -693,11 +709,98 @@ class Controller(QObject):
 
     def handle_get_uid_result(self, uid_str):
         '''处理读取UID结果'''
+
         self.view.enable_operation_buttons()
         if uid_str:
             self.view.append_to_output_widget(f'读取UID成功 {uid_str}', self.view.LOG_TYPE_DATA)
+            
+            # 检查是否是写Qi密钥流程中的UID获取
+            if self._write_qi_key_uid_callback:
+                self._write_qi_key_uid_callback = None
+                self._handle_write_qi_key_get_uid_result(uid_str)
         else:
             self.view.append_to_output_widget(f'读取UID失败', self.view.LOG_TYPE_ERROR)
+
+    def write_qi_key(self):
+        '''
+        写入Qi密钥按钮点击处理
+        流程：
+        1. 获取黑盒子的 UID
+        2. 将 UID 发送到服务器获取加密密钥（服务器验证 token）
+        3. 将密钥写入黑盒子
+        '''
+        logger.info('点击写Qi密钥按钮')
+
+        if not self.serial_thread or not self.serial_thread.isRunning():
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+            return
+        
+
+        # 开始写密钥流程
+        self.view.append_to_output_widget('开始写Qi密钥流程...', self.view.LOG_TYPE_INFO)
+        self.view.disable_operation_buttons()
+
+        # 设置回调标志，UID 结果会路由到写密钥流程
+        self._write_qi_key_uid_callback = True
+
+        # 获取 UID
+        self.serial_thread.get_uid()
+
+    def _handle_write_qi_key_get_uid_result(self, uid_str):
+        '''处理写Qi密钥流程中获取UID的结果'''
+        if not uid_str:
+            self.view.append_to_output_widget('获取UID失败，无法继续', self.view.LOG_TYPE_ERROR)
+            self.view.enable_operation_buttons()
+            self._write_qi_key_uid_callback = None
+            return
+        
+        self.view.disable_operation_buttons()
+        # 从API获取密钥
+        success, message, key = self.view.api_client.get_encryption_key(uid_str)
+
+        if not success:
+            if message == '401':
+                # Token过期，需要重新登录
+                from view.login_dialog import LoginDialog
+                dialog = LoginDialog(self.view.api_client)
+                if dialog.exec() == QDialog.Accepted:
+                    token = dialog.get_token()
+                    if token:
+                        # 重新获取密钥
+                        success, message, key = self.view.api_client.get_encryption_key(uid_str, token)
+                        if not success:
+                            self._handle_qi_key_get_failed(message)
+                            return
+                    else:
+                        self.view.append_to_output_widget('登录失败，操作取消', self.view.LOG_TYPE_ERROR)
+                        self.view.enable_operation_buttons()
+                        self._write_qi_key_uid_callback = None
+                        return
+                else:
+                    self.view.append_to_output_widget('未登录，操作取消', self.view.LOG_TYPE_WARN)
+                    self.view.enable_operation_buttons()
+                    self._write_qi_key_uid_callback = None
+                    return
+            else:
+                self._handle_qi_key_get_failed(message)
+                return
+
+        # 密钥获取成功，准备写入
+        self.view.append_to_output_widget(f'获取加密密钥成功，开始写入...', self.view.LOG_TYPE_INFO)
+
+        # 将密钥写入黑盒子
+        self.serial_thread.write_qi_key(key)
+
+    def _handle_qi_key_get_failed(self, message):
+        '''处理获取密钥失败的统一处理'''
+        if message == '403':
+            self.view.append_to_output_widget('无配额，请联系管理员', self.view.LOG_TYPE_ERROR)
+        else:
+            self.view.append_to_output_widget(f'获取密钥失败: {message}', self.view.LOG_TYPE_ERROR)
+        self.view.enable_operation_buttons()
+        if hasattr(self, '_write_qi_key_uid_callback'):
+            self._write_qi_key_uid_callback = None
 
     def send_flash_driver(self):
         '''通知传输FlashDriver按钮点击处理'''
@@ -720,19 +823,16 @@ class Controller(QObject):
 
     def handle_write_qi_key_result(self, success, error_msg):
         '''处理写入Qi密钥结果'''
-        self.view.enable_operation_buttons()
+        # 清理回调标志
+        if hasattr(self, '_write_qi_key_uid_callback'):
+            self._write_qi_key_uid_callback = None
+
         if success:
-            self.view.append_to_log_edit(
-                '写入Qi密钥成功',
-                type=View.LOG_SEND,
-                decode=View.HEX,
-            )
+            self.view.append_to_output_widget('写入Qi密钥成功', self.view.LOG_TYPE_INFO)
         else:
-            self.view.append_to_log_edit(
-                f'写入Qi密钥失败: {error_msg}',
-                type=View.LOG_SEND,
-                decode=View.HEX,
-            )
+            self.view.append_to_output_widget(f'写入Qi密钥失败: {error_msg}', self.view.LOG_TYPE_ERROR)
+
+        self.view.enable_operation_buttons()
 
     def handle_get_key_status_result(self, key_status_list, message):
         '''

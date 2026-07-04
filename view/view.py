@@ -22,6 +22,7 @@ from utils.file_utils import exe_absolute_path, read_file, is_file_exists
 from utils.flash_driver import get_file_path_from_config
 from utils.data_processor import ValidValues
 from utils.common_data_utils import byte_array_to_hex_string, array_to_ascii
+from utils.api_client import ApiClient
 
 logger = logging.getLogger(__name__)
 class MyComboBox(QComboBox):
@@ -276,6 +277,7 @@ class View(QMainWindow):
         self.config_path = None
         self.flash_driver_path = None  # FlashDriver 文件路径
         self.auto_scroll = True
+        self.api_client = ApiClient()  # API 客户端实例
         self.load_last_config()  # 初始化加载
         self.config_edit_window = None  # 新增属性，用于跟踪 config_edit 窗口
         self.config_edit_qss = None
@@ -717,7 +719,7 @@ class View(QMainWindow):
         config_file = exe_absolute_path('last_config.ini')
         if os.path.exists(config_file):
             try:
-                with open(config_file, 'r') as f:
+                with open(config_file, 'r', encoding='utf-8') as f:
                     content = f.read().strip()
 
                     # 尝试解析为JSON格式（新版本格式）
@@ -725,6 +727,12 @@ class View(QMainWindow):
                         config_data = json.loads(content)
                         self.config_path = config_data.get('path')
                         saved_port = config_data.get('serial_port', '')
+                        # 加载 API 认证信息
+                        api_token = config_data.get('qi_api_token')
+                        api_username = config_data.get('qi_api_username')
+                        if api_token and api_username:
+                            self.api_client.set_auth(api_token, api_username)
+                            logger.info('已加载 API 认证信息，用户名: %s', api_username)
                     except json.JSONDecodeError:
                         # 旧版本格式：纯路径字符串
                         self.config_path = content
@@ -753,18 +761,25 @@ class View(QMainWindow):
                 logger.error('加载历史配置失败: %s', e)
 
     def save_last_config(self):
-        """保存当前配置文件路径"""
+        """保存当前配置文件路径和 API 认证信息"""
         config_file = exe_absolute_path('last_config.ini')
         try:
             current_port = self.ui.serialBox.currentText().split(' #')[0]  # 获取当前选择的串口
-            with open(config_file, 'w') as f:
+            
+            # 从 ApiClient 获取认证信息
+            api_client = self.api_client
+            api_token = api_client.token
+            api_username = api_client.username
+            
+            with open(config_file, 'w', encoding='utf-8') as f:
                 config_data = {
                     'path': self.config_path,
-                    'serial_port': current_port
+                    'serial_port': current_port,
+                    'qi_api_token': api_token,
+                    'qi_api_username': api_username
                 }
-                json.dump(config_data, f)
-                # f.write(self.config_path)
-                logger.info('保存配置路径: %s', self.config_path)
+                json.dump(config_data, f, ensure_ascii=False)
+                logger.info('保存配置路径: %s, API用户: %s', self.config_path, api_username)
         except Exception as e:
             logger.error('保存配置路径失败: %s', e)
 

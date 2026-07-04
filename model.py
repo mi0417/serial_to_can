@@ -2,6 +2,7 @@
 Model类
 处理数据
 
+屎山代码重灾区
 '''
 import time
 import random
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class SerialModel(QObject):
     data_discarded_signal = Signal(dict)  # 类属性，所有实例共享
+    write_qi_key_progress_signal = Signal(str, int)  # (message, progress) - 写Qi密钥进度信号
 
     def __init__(self):
         super().__init__()
@@ -261,7 +263,7 @@ class SerialModel(QObject):
         '''
         读取UID
         TODO 未返回读取失败原因
-        :return: UID字符串(16字节HEX) 或 None
+        :return: UID 或 None
         '''
         logger.info('开始读取UID')
         get_uid_message = SerialMessage.generate_new_message(
@@ -272,8 +274,7 @@ class SerialModel(QObject):
             logger.error('读取UID失败：无响应')
             return None
         
-        uid_str = utils.byte_array_to_hex_string(response_message.data)
-        return uid_str
+        return response_message.data
 
     def send_flash_driver_start(self):
         '''
@@ -307,15 +308,20 @@ class SerialModel(QObject):
         key_data = utils.hex_str_to_byte_array(key_hex)
         message = SerialMessage.generate_new_message(
             ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_WRITE_QI_KEY, key_data)
+        # 发送写入开始信号（需要通过外部信号发射）
+        self.write_qi_key_progress_signal.emit('开始写入密钥', 10)
         response = self.send_request_with_retry(message)
         if response is None:
             logger.error('写入Qi密钥失败：无响应')
+            self.write_qi_key_progress_signal.emit('写入失败：无响应', 0)
             return False
         if len(response.data) >= 2 and response.data[:2] == ValidValues.RESET_SUCCESS_DATA:
             logger.info('写入Qi密钥成功')
+            self.write_qi_key_progress_signal.emit('写入完成', 100)
             return True
         else:
             logger.error('写入Qi密钥失败：状态码错误 %s', response.data[:2].hex() if len(response.data) >= 2 else 'N/A')
+            self.write_qi_key_progress_signal.emit('写入失败：状态码错误', 0)
             return False
 
     def reset_device(self):

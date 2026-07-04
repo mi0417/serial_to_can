@@ -1,3 +1,7 @@
+'''
+入口
+'''
+
 from utils.logger import delete_expired_logs
 
 import sys
