@@ -89,6 +89,24 @@ class ValidValues:
     GET_KEY_STATUS_KEY = 'get_key_status'
     READ_WRITE_KEY_KEY = 'read_write_key'
 
+    # 定义自定义 DID 配置常量（keyDIDWidget 勾选时使用）
+    CUSTOM_DID_SECTION = 'custom_did'
+    GET_UID_DID_KEY = 'get_uid_did'
+    HUAWEI_READ_DID_KEY = 'huawei_read_did'
+    HUAWEI_WRITE_DID_KEY = 'huawei_write_did'
+    XIAOMI_READ_DID_KEY = 'xiaomi_read_did'
+    XIAOMI_WRITE_DID_KEY = 'xiaomi_write_did'
+    HONOR_READ_DID_KEY = 'honor_read_did'
+    HONOR_WRITE_DID_KEY = 'honor_write_did'
+    QI_READ_DID_KEY = 'qi_read_did'
+    QI_WRITE_DID_KEY = 'qi_write_did'
+    OPPO_READ_DID_KEY = 'oppo_read_did'
+    OPPO_WRITE_DID_KEY = 'oppo_write_did'
+    LUXQI_READ_DID_KEY = 'luxqi_read_did'
+    LUXQI_WRITE_DID_KEY = 'luxqi_write_did'
+    VIVO_READ_DID_KEY = 'vivo_read_did'
+    VIVO_WRITE_DID_KEY = 'vivo_write_did'
+
     # 定义Qi密钥配置常量
     QI_CERTIFICATE_SECTION = 'Qi_certificate'
     QI_TRANSMIT_ID_KEY = 'qi_transmit_id'

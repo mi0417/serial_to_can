@@ -162,11 +162,6 @@ class SerialCommunicationThread(QThread):
             'method': 'get_software_version',
             'callback': _callback
         })
-        # software_version = self.model.get_software_version()
-        # if software_version:
-        #     self.sw_ver_signal.emit(software_version)
-        # else:
-        #     self.sw_ver_signal.emit(self.EMIT_STR_ERROR)
 
     def reset_device(self):
         '''
@@ -179,9 +174,6 @@ class SerialCommunicationThread(QThread):
             'method': 'reset_device',
             'callback': _callback
         })
-        # result = self.model.reset_device()
-        # self.reset_result_signal.emit(result, self.port_name)
-        # return result
 
     def set_config_device(self, toml_path=None):
         '''
@@ -220,14 +212,6 @@ class SerialCommunicationThread(QThread):
             'method': 'reset_device',
             'callback': reset_callback
         })
-        # result = self.model.reset_device()
-        # if result:
-        # # if self.reset_device():
-
-        #     result, message = self.model.config_device(toml_path)
-        #     self.set_config_result_signal.emit(result, message)
-        # else:
-        #     self.set_config_result_signal.emit(False, '复位失败，未执行配置')
 
     def read_config_device(self):
         '''
@@ -243,11 +227,6 @@ class SerialCommunicationThread(QThread):
             'method': 'read_device_config',
             'callback': _callback
         })
-        # result, message = self.model.read_device_config()
-        # if not result and not message:
-        #     self.read_config_result_signal.emit(result, '读取失败')
-        # else:
-        #     self.read_config_result_signal.emit(result, message)
     
     def get_key_status(self):
         '''
@@ -263,10 +242,6 @@ class SerialCommunicationThread(QThread):
             'method': 'get_key_status',
             'callback': _callback
         })
-        # result, message = self.model.get_key_status()
-        # if not result and not message:
-        #     self.get_key_status_result_signal.emit(result, '读取失败')
-        # self.get_key_status_result_signal.emit(result, message)
 
     def input_flash_driver(self, file_path):
         '''
@@ -319,15 +294,7 @@ class SerialCommunicationThread(QThread):
         Args:
             key: 从服务器获取的加密密钥
         '''
-        # 连接 model 的进度信号到 thread 的信号
-        #self.model.write_qi_key_progress_signal.connect(self.write_qi_key_progress_signal.emit)
-
         def _callback(result):
-            # 完成后断开信号连接 ? 为啥？
-            # try:
-            #     self.model.write_qi_key_progress_signal.disconnect(self.write_qi_key_progress_signal.emit)
-            # except Exception:
-            #     pass
             if result:
                 self.write_qi_key_result_signal.emit(True, '')
             else:
@@ -338,10 +305,7 @@ class SerialCommunicationThread(QThread):
             'args': [key],
             'callback': _callback
         })
-        
-        
 
-    # def receive_data(self):
 
     def send_data(self, data):
         '''

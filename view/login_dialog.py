@@ -23,7 +23,7 @@ class LoginDialog(QDialog):
 
     def _setup_ui(self):
         '''设置 UI'''
-        self.setWindowTitle('登录 Qi 密钥服务')
+        self.setWindowTitle('登录立讯 Qi 密钥服务')
         self.setModal(True)
         self.setMinimumWidth(350)
 

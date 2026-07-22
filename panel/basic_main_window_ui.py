@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'basic_main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -113,45 +113,55 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.widget_3 = QWidget(self.groupBox)
         self.widget_3.setObjectName(u"widget_3")
-        self.horizontalLayout_5 = QHBoxLayout(self.widget_3)
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.getSwVerButton = QPushButton(self.widget_3)
-        self.getSwVerButton.setObjectName(u"getSwVerButton")
+        self.gridLayout_2 = QGridLayout(self.widget_3)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.getConfigButton = QPushButton(self.widget_3)
+        self.getConfigButton.setObjectName(u"getConfigButton")
 
-        self.horizontalLayout_5.addWidget(self.getSwVerButton)
+        self.gridLayout_2.addWidget(self.getConfigButton, 0, 3, 1, 1)
 
         self.resetButton = QPushButton(self.widget_3)
         self.resetButton.setObjectName(u"resetButton")
 
-        self.horizontalLayout_5.addWidget(self.resetButton)
+        self.gridLayout_2.addWidget(self.resetButton, 0, 1, 1, 1)
 
-        self.setConfigButton = QPushButton(self.widget_3)
-        self.setConfigButton.setObjectName(u"setConfigButton")
-        self.setConfigButton.setMouseTracking(False)
+        self.getSwVerButton = QPushButton(self.widget_3)
+        self.getSwVerButton.setObjectName(u"getSwVerButton")
 
-        self.horizontalLayout_5.addWidget(self.setConfigButton)
-
-        self.getConfigButton = QPushButton(self.widget_3)
-        self.getConfigButton.setObjectName(u"getConfigButton")
-
-        self.horizontalLayout_5.addWidget(self.getConfigButton)
+        self.gridLayout_2.addWidget(self.getSwVerButton, 0, 0, 1, 1)
 
         self.inputFlashDriverButton = QPushButton(self.widget_3)
         self.inputFlashDriverButton.setObjectName(u"inputFlashDriverButton")
 
-        self.horizontalLayout_5.addWidget(self.inputFlashDriverButton)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_5.addItem(self.horizontalSpacer)
+        self.gridLayout_2.addWidget(self.inputFlashDriverButton, 0, 4, 1, 1)
 
         self.oneKeyButton = QPushButton(self.widget_3)
         self.oneKeyButton.setObjectName(u"oneKeyButton")
         icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
         self.oneKeyButton.setIcon(icon3)
 
-        self.horizontalLayout_5.addWidget(self.oneKeyButton)
+        self.gridLayout_2.addWidget(self.oneKeyButton, 0, 6, 1, 1)
+
+        self.setConfigButton = QPushButton(self.widget_3)
+        self.setConfigButton.setObjectName(u"setConfigButton")
+        self.setConfigButton.setMouseTracking(False)
+
+        self.gridLayout_2.addWidget(self.setConfigButton, 0, 2, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 5, 1, 1)
+
+        self.setKeyDIDButton = QPushButton(self.widget_3)
+        self.setKeyDIDButton.setObjectName(u"setKeyDIDButton")
+
+        self.gridLayout_2.addWidget(self.setKeyDIDButton, 1, 0, 1, 1)
+
+        self.getKeyDIDButton = QPushButton(self.widget_3)
+        self.getKeyDIDButton.setObjectName(u"getKeyDIDButton")
+
+        self.gridLayout_2.addWidget(self.getKeyDIDButton, 1, 1, 1, 1)
 
 
         self.verticalLayout_5.addWidget(self.widget_3)
@@ -523,21 +533,17 @@ class Ui_MainWindow(object):
         self.editConfigBtn.setText("")
         self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"\u8bbe\u5907\u914d\u7f6e\uff08\u9f20\u6807\u60ac\u505c\u663e\u793a\u529f\u80fd\u4fe1\u606f\uff09", None))
 #if QT_CONFIG(tooltip)
-        self.getSwVerButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u786c\u4ef6\u7248\u672c\u53f7", None))
+        self.getConfigButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u5f53\u524d\u8bbe\u7f6e", None))
 #endif // QT_CONFIG(tooltip)
-        self.getSwVerButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u8f6f\u4ef6\u7248\u672c\u53f7", None))
+        self.getConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u914d\u7f6e", None))
 #if QT_CONFIG(tooltip)
         self.resetButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u6267\u884c\u590d\u4f4d", None))
 #endif // QT_CONFIG(tooltip)
         self.resetButton.setText(QCoreApplication.translate("MainWindow", u"\u590d\u4f4d", None))
 #if QT_CONFIG(tooltip)
-        self.setConfigButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8fdb\u884c\u590d\u4f4d\uff0c\u914d\u7f6e\u53c2\u6570\u5e76\u786e\u8ba4\u53c2\u6570", None))
+        self.getSwVerButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u786c\u4ef6\u7248\u672c\u53f7", None))
 #endif // QT_CONFIG(tooltip)
-        self.setConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u53c2\u6570\u914d\u7f6e", None))
-#if QT_CONFIG(tooltip)
-        self.getConfigButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u5f53\u524d\u8bbe\u7f6e", None))
-#endif // QT_CONFIG(tooltip)
-        self.getConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u914d\u7f6e", None))
+        self.getSwVerButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u8f6f\u4ef6\u7248\u672c\u53f7", None))
 #if QT_CONFIG(tooltip)
         self.inputFlashDriverButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u4ec5\u77fd\u529b\u6770\u5e73\u53f0\u82af\u7247\u4f7f\u7528\uff0c\u5bfc\u5165FlashDriver\u6587\u4ef6\u5230\u9ed1\u76d2\u5b50\uff0c\u82e5\u914d\u7f6e\u6587\u4ef6\u4e2d\u65e0FlashDriver\u76f8\u5173\u5219\u65e0\u6cd5\u914d\u7f6e\u6210\u529f", None))
 #endif // QT_CONFIG(tooltip)
@@ -546,6 +552,18 @@ class Ui_MainWindow(object):
         self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
 #endif // QT_CONFIG(tooltip)
         self.oneKeyButton.setText(QCoreApplication.translate("MainWindow", u"\u4e00\u952e\u914d\u7f6e", None))
+#if QT_CONFIG(tooltip)
+        self.setConfigButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8fdb\u884c\u590d\u4f4d\uff0c\u914d\u7f6e\u53c2\u6570\u5e76\u786e\u8ba4\u53c2\u6570", None))
+#endif // QT_CONFIG(tooltip)
+        self.setConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u53c2\u6570\u914d\u7f6e", None))
+#if QT_CONFIG(tooltip)
+        self.setKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u6267\u884c\u590d\u4f4d", None))
+#endif // QT_CONFIG(tooltip)
+        self.setKeyDIDButton.setText(QCoreApplication.translate("MainWindow", u"\u914d\u7f6eDID", None))
+#if QT_CONFIG(tooltip)
+        self.getKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u6267\u884c\u590d\u4f4d", None))
+#endif // QT_CONFIG(tooltip)
+        self.getKeyDIDButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6DID", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c", None))
 #if QT_CONFIG(tooltip)
         self.getKeyStatusButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u5bc6\u94a5\u72b6\u6001", None))

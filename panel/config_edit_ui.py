@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'config_edit.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.11.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -16,17 +16,18 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout,
-    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QStatusBar, QTableWidget, QTableWidgetItem, QVBoxLayout,
+    QWidget)
 
 class Ui_configEditWindow(object):
     def setupUi(self, configEditWindow):
         if not configEditWindow.objectName():
             configEditWindow.setObjectName(u"configEditWindow")
-        configEditWindow.resize(550, 650)
+        configEditWindow.resize(550, 800)
         self.importAction = QAction(configEditWindow)
         self.importAction.setObjectName(u"importAction")
         icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen))
@@ -169,37 +170,280 @@ class Ui_configEditWindow(object):
 
         self.DIDgroupBox = QGroupBox(self.centralwidget)
         self.DIDgroupBox.setObjectName(u"DIDgroupBox")
-        self.horizontalLayout_3 = QHBoxLayout(self.DIDgroupBox)
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.label_13 = QLabel(self.DIDgroupBox)
+        self.verticalLayout_4 = QVBoxLayout(self.DIDgroupBox)
+        self.verticalLayout_4.setSpacing(1)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.cusdomKeyDIDcheckBox = QCheckBox(self.DIDgroupBox)
+        self.cusdomKeyDIDcheckBox.setObjectName(u"cusdomKeyDIDcheckBox")
+
+        self.verticalLayout_4.addWidget(self.cusdomKeyDIDcheckBox)
+
+        self.widget_5 = QWidget(self.DIDgroupBox)
+        self.widget_5.setObjectName(u"widget_5")
+        self.horizontalLayout_7 = QHBoxLayout(self.widget_5)
+        self.horizontalLayout_7.setSpacing(1)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.horizontalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.widget_7 = QWidget(self.widget_5)
+        self.widget_7.setObjectName(u"widget_7")
+        self.horizontalLayout_6 = QHBoxLayout(self.widget_7)
+        self.horizontalLayout_6.setSpacing(1)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.label_13 = QLabel(self.widget_7)
         self.label_13.setObjectName(u"label_13")
 
-        self.horizontalLayout_3.addWidget(self.label_13)
+        self.horizontalLayout_6.addWidget(self.label_13)
 
-        self.getKeyStatusDIDlineEdit = QLineEdit(self.DIDgroupBox)
+        self.getKeyStatusDIDlineEdit = QLineEdit(self.widget_7)
         self.getKeyStatusDIDlineEdit.setObjectName(u"getKeyStatusDIDlineEdit")
 
-        self.horizontalLayout_3.addWidget(self.getKeyStatusDIDlineEdit)
+        self.horizontalLayout_6.addWidget(self.getKeyStatusDIDlineEdit)
 
-        self.label_14 = QLabel(self.DIDgroupBox)
+
+        self.horizontalLayout_7.addWidget(self.widget_7)
+
+        self.defaultKeyDIDWidget = QWidget(self.widget_5)
+        self.defaultKeyDIDWidget.setObjectName(u"defaultKeyDIDWidget")
+        self.horizontalLayout_3 = QHBoxLayout(self.defaultKeyDIDWidget)
+        self.horizontalLayout_3.setSpacing(1)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.label_14 = QLabel(self.defaultKeyDIDWidget)
         self.label_14.setObjectName(u"label_14")
 
         self.horizontalLayout_3.addWidget(self.label_14)
 
-        self.readWriteKeyDIDlineEdit = QLineEdit(self.DIDgroupBox)
+        self.readWriteKeyDIDlineEdit = QLineEdit(self.defaultKeyDIDWidget)
         self.readWriteKeyDIDlineEdit.setObjectName(u"readWriteKeyDIDlineEdit")
 
         self.horizontalLayout_3.addWidget(self.readWriteKeyDIDlineEdit)
 
-        self.label_15 = QLabel(self.DIDgroupBox)
+        self.label_15 = QLabel(self.defaultKeyDIDWidget)
         self.label_15.setObjectName(u"label_15")
 
         self.horizontalLayout_3.addWidget(self.label_15)
 
-        self.getQiStatusDIDlineEdit = QLineEdit(self.DIDgroupBox)
+        self.getQiStatusDIDlineEdit = QLineEdit(self.defaultKeyDIDWidget)
         self.getQiStatusDIDlineEdit.setObjectName(u"getQiStatusDIDlineEdit")
 
         self.horizontalLayout_3.addWidget(self.getQiStatusDIDlineEdit)
+
+
+        self.horizontalLayout_7.addWidget(self.defaultKeyDIDWidget)
+
+
+        self.verticalLayout_4.addWidget(self.widget_5)
+
+        self.keyDIDWidget = QWidget(self.DIDgroupBox)
+        self.keyDIDWidget.setObjectName(u"keyDIDWidget")
+        self.verticalLayout_5 = QVBoxLayout(self.keyDIDWidget)
+        self.verticalLayout_5.setSpacing(0)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.widget_9 = QWidget(self.keyDIDWidget)
+        self.widget_9.setObjectName(u"widget_9")
+        self.gridLayout_5 = QGridLayout(self.widget_9)
+        self.gridLayout_5.setSpacing(1)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.label_31 = QLabel(self.widget_9)
+        self.label_31.setObjectName(u"label_31")
+        self.label_31.setMinimumSize(QSize(72, 0))
+
+        self.gridLayout_5.addWidget(self.label_31, 0, 0, 1, 1)
+
+        self.writeVivoKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeVivoKeyDIDlineEdit.setObjectName(u"writeVivoKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeVivoKeyDIDlineEdit, 4, 3, 1, 1)
+
+        self.label_39 = QLabel(self.widget_9)
+        self.label_39.setObjectName(u"label_39")
+
+        self.gridLayout_5.addWidget(self.label_39, 3, 2, 1, 1)
+
+        self.label_38 = QLabel(self.widget_9)
+        self.label_38.setObjectName(u"label_38")
+
+        self.gridLayout_5.addWidget(self.label_38, 3, 0, 1, 1)
+
+        self.writeXiaomiKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeXiaomiKeyDIDlineEdit.setObjectName(u"writeXiaomiKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeXiaomiKeyDIDlineEdit, 1, 9, 1, 1)
+
+        self.label_42 = QLabel(self.widget_9)
+        self.label_42.setObjectName(u"label_42")
+
+        self.gridLayout_5.addWidget(self.label_42, 2, 6, 1, 1)
+
+        self.label_40 = QLabel(self.widget_9)
+        self.label_40.setObjectName(u"label_40")
+
+        self.gridLayout_5.addWidget(self.label_40, 4, 0, 1, 1)
+
+        self.label_35 = QLabel(self.widget_9)
+        self.label_35.setObjectName(u"label_35")
+
+        self.gridLayout_5.addWidget(self.label_35, 2, 2, 1, 1)
+
+        self.label_41 = QLabel(self.widget_9)
+        self.label_41.setObjectName(u"label_41")
+
+        self.gridLayout_5.addWidget(self.label_41, 4, 2, 1, 1)
+
+        self.label_43 = QLabel(self.widget_9)
+        self.label_43.setObjectName(u"label_43")
+
+        self.gridLayout_5.addWidget(self.label_43, 2, 8, 1, 1)
+
+        self.readHuaweiDIDlineEdit = QLineEdit(self.widget_9)
+        self.readHuaweiDIDlineEdit.setObjectName(u"readHuaweiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readHuaweiDIDlineEdit, 1, 1, 1, 1)
+
+        self.writeHuaweiDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeHuaweiDIDlineEdit.setObjectName(u"writeHuaweiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeHuaweiDIDlineEdit, 1, 3, 1, 1)
+
+        self.readLuxQiDIDlineEdit = QLineEdit(self.widget_9)
+        self.readLuxQiDIDlineEdit.setObjectName(u"readLuxQiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readLuxQiDIDlineEdit, 3, 7, 1, 1)
+
+        self.getUIDDIDlineEdit = QLineEdit(self.widget_9)
+        self.getUIDDIDlineEdit.setObjectName(u"getUIDDIDlineEdit")
+        self.getUIDDIDlineEdit.setEnabled(True)
+        self.getUIDDIDlineEdit.setMinimumSize(QSize(0, 0))
+
+        self.gridLayout_5.addWidget(self.getUIDDIDlineEdit, 0, 1, 1, 1)
+
+        self.label_45 = QLabel(self.widget_9)
+        self.label_45.setObjectName(u"label_45")
+
+        self.gridLayout_5.addWidget(self.label_45, 3, 6, 1, 1)
+
+        self.label_34 = QLabel(self.widget_9)
+        self.label_34.setObjectName(u"label_34")
+
+        self.gridLayout_5.addWidget(self.label_34, 2, 0, 1, 1)
+
+        self.readQiDIDlineEdit = QLineEdit(self.widget_9)
+        self.readQiDIDlineEdit.setObjectName(u"readQiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readQiDIDlineEdit, 2, 7, 1, 1)
+
+        self.writeLuxQiDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeLuxQiDIDlineEdit.setObjectName(u"writeLuxQiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeLuxQiDIDlineEdit, 3, 9, 1, 1)
+
+        self.label_44 = QLabel(self.widget_9)
+        self.label_44.setObjectName(u"label_44")
+
+        self.gridLayout_5.addWidget(self.label_44, 3, 8, 1, 1)
+
+        self.writeQiDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeQiDIDlineEdit.setObjectName(u"writeQiDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeQiDIDlineEdit, 2, 9, 1, 1)
+
+        self.label_37 = QLabel(self.widget_9)
+        self.label_37.setObjectName(u"label_37")
+
+        self.gridLayout_5.addWidget(self.label_37, 1, 8, 1, 1)
+
+        self.readXiaomiKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.readXiaomiKeyDIDlineEdit.setObjectName(u"readXiaomiKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readXiaomiKeyDIDlineEdit, 1, 7, 1, 1)
+
+        self.writeOppoKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeOppoKeyDIDlineEdit.setObjectName(u"writeOppoKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeOppoKeyDIDlineEdit, 3, 3, 1, 1)
+
+        self.label_33 = QLabel(self.widget_9)
+        self.label_33.setObjectName(u"label_33")
+
+        self.gridLayout_5.addWidget(self.label_33, 1, 2, 1, 1)
+
+        self.writeHonorKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.writeHonorKeyDIDlineEdit.setObjectName(u"writeHonorKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.writeHonorKeyDIDlineEdit, 2, 3, 1, 1)
+
+        self.label_36 = QLabel(self.widget_9)
+        self.label_36.setObjectName(u"label_36")
+
+        self.gridLayout_5.addWidget(self.label_36, 1, 6, 1, 1)
+
+        self.readOppoKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.readOppoKeyDIDlineEdit.setObjectName(u"readOppoKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readOppoKeyDIDlineEdit, 3, 1, 1, 1)
+
+        self.readHonorKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.readHonorKeyDIDlineEdit.setObjectName(u"readHonorKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readHonorKeyDIDlineEdit, 2, 1, 1, 1)
+
+        self.readVivoKeyDIDlineEdit = QLineEdit(self.widget_9)
+        self.readVivoKeyDIDlineEdit.setObjectName(u"readVivoKeyDIDlineEdit")
+
+        self.gridLayout_5.addWidget(self.readVivoKeyDIDlineEdit, 4, 1, 1, 1)
+
+        self.label_32 = QLabel(self.widget_9)
+        self.label_32.setObjectName(u"label_32")
+
+        self.gridLayout_5.addWidget(self.label_32, 1, 0, 1, 1)
+
+        self.line_3 = QFrame(self.widget_9)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setFrameShape(QFrame.Shape.VLine)
+        self.line_3.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.gridLayout_5.addWidget(self.line_3, 3, 4, 1, 1)
+
+        self.line_4 = QFrame(self.widget_9)
+        self.line_4.setObjectName(u"line_4")
+        self.line_4.setFrameShape(QFrame.Shape.VLine)
+        self.line_4.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.gridLayout_5.addWidget(self.line_4, 4, 4, 1, 1)
+
+        self.line_2 = QFrame(self.widget_9)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setFrameShape(QFrame.Shape.VLine)
+        self.line_2.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.gridLayout_5.addWidget(self.line_2, 2, 4, 1, 1)
+
+        self.line = QFrame(self.widget_9)
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.Shape.VLine)
+        self.line.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.gridLayout_5.addWidget(self.line, 1, 4, 1, 1)
+
+
+        self.verticalLayout_5.addWidget(self.widget_9)
+
+        self.label_46 = QLabel(self.keyDIDWidget)
+        self.label_46.setObjectName(u"label_46")
+        self.label_46.setMinimumSize(QSize(0, 20))
+        font = QFont()
+        font.setPointSize(8)
+        font.setItalic(True)
+        self.label_46.setFont(font)
+        self.label_46.setAlignment(Qt.AlignmentFlag.AlignBottom|Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft)
+
+        self.verticalLayout_5.addWidget(self.label_46)
+
+
+        self.verticalLayout_4.addWidget(self.keyDIDWidget)
 
 
         self.verticalLayout_3.addWidget(self.DIDgroupBox)
@@ -234,6 +478,46 @@ class Ui_configEditWindow(object):
         self.gridLayout_4 = QGridLayout(self.widget)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 2, 1, 1)
+
+        self.label_8 = QLabel(self.widget)
+        self.label_8.setObjectName(u"label_8")
+
+        self.gridLayout_4.addWidget(self.label_8, 0, 0, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 6, 1, 1)
+
+        self.NMPeriodLineEdit = QLineEdit(self.widget)
+        self.NMPeriodLineEdit.setObjectName(u"NMPeriodLineEdit")
+        self.NMPeriodLineEdit.setMinimumSize(QSize(0, 0))
+        self.NMPeriodLineEdit.setMaximumSize(QSize(150, 16777215))
+
+        self.gridLayout_4.addWidget(self.NMPeriodLineEdit, 0, 4, 1, 1)
+
+        self.NMIDlineEdit = QLineEdit(self.widget)
+        self.NMIDlineEdit.setObjectName(u"NMIDlineEdit")
+        self.NMIDlineEdit.setMaximumSize(QSize(150, 16777215))
+
+        self.gridLayout_4.addWidget(self.NMIDlineEdit, 0, 1, 1, 1)
+
+        self.label_10 = QLabel(self.widget)
+        self.label_10.setObjectName(u"label_10")
+
+        self.gridLayout_4.addWidget(self.label_10, 0, 5, 1, 1)
+
+        self.label_9 = QLabel(self.widget)
+        self.label_9.setObjectName(u"label_9")
+
+        self.gridLayout_4.addWidget(self.label_9, 0, 3, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 9, 1, 1)
+
         self.label_11 = QLabel(self.widget)
         self.label_11.setObjectName(u"label_11")
 
@@ -259,46 +543,6 @@ class Ui_configEditWindow(object):
         self.NMDLCcomboBox.setObjectName(u"NMDLCcomboBox")
 
         self.gridLayout_4.addWidget(self.NMDLCcomboBox, 0, 8, 1, 1)
-
-        self.label_8 = QLabel(self.widget)
-        self.label_8.setObjectName(u"label_8")
-
-        self.gridLayout_4.addWidget(self.label_8, 0, 0, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 2, 1, 1)
-
-        self.NMIDlineEdit = QLineEdit(self.widget)
-        self.NMIDlineEdit.setObjectName(u"NMIDlineEdit")
-        self.NMIDlineEdit.setMaximumSize(QSize(150, 16777215))
-
-        self.gridLayout_4.addWidget(self.NMIDlineEdit, 0, 1, 1, 1)
-
-        self.NMPeriodLineEdit = QLineEdit(self.widget)
-        self.NMPeriodLineEdit.setObjectName(u"NMPeriodLineEdit")
-        self.NMPeriodLineEdit.setMinimumSize(QSize(0, 0))
-        self.NMPeriodLineEdit.setMaximumSize(QSize(150, 16777215))
-
-        self.gridLayout_4.addWidget(self.NMPeriodLineEdit, 0, 4, 1, 1)
-
-        self.label_10 = QLabel(self.widget)
-        self.label_10.setObjectName(u"label_10")
-
-        self.gridLayout_4.addWidget(self.label_10, 0, 5, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 6, 1, 1)
-
-        self.label_9 = QLabel(self.widget)
-        self.label_9.setObjectName(u"label_9")
-
-        self.gridLayout_4.addWidget(self.label_9, 0, 3, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 9, 1, 1)
 
 
         self.verticalLayout.addWidget(self.widget)
@@ -587,15 +831,51 @@ class Ui_configEditWindow(object):
         self.label_7.setText(QCoreApplication.translate("configEditWindow", u"\u63a5\u6536ID", None))
         self.qiReceiveIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x7F1", None))
         self.DIDgroupBox.setTitle(QCoreApplication.translate("configEditWindow", u"\u5bc6\u94a5\u8bfb\u5199DID", None))
+        self.cusdomKeyDIDcheckBox.setText(QCoreApplication.translate("configEditWindow", u"\u81ea\u5b9a\u4e49\u6240\u6709ID\uff08\u9002\u7528\u4e8e072/073\u9879\u76ee\uff09", None))
         self.label_13.setText(QCoreApplication.translate("configEditWindow", u"\u83b7\u53d6\u5bc6\u94a5\u72b6\u6001", None))
         self.getKeyStatusDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x4209", None))
         self.label_14.setText(QCoreApplication.translate("configEditWindow", u"\u8bfb\u5199\u534e\u4e3a\u8363\u8000", None))
         self.readWriteKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x420A", None))
         self.label_15.setText(QCoreApplication.translate("configEditWindow", u"\u83b7\u53d6Qi\u5bc6\u94a5\u72b6\u6001", None))
         self.getQiStatusDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x420D", None))
+        self.label_31.setText(QCoreApplication.translate("configEditWindow", u"\u8bfbUID", None))
+        self.writeVivoKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_39.setText(QCoreApplication.translate("configEditWindow", u"\u5199oppo Key", None))
+        self.label_38.setText(QCoreApplication.translate("configEditWindow", u"\u8bfboppo Key", None))
+        self.writeXiaomiKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_42.setText(QCoreApplication.translate("configEditWindow", u"\u8bfbQi", None))
+        self.label_40.setText(QCoreApplication.translate("configEditWindow", u"\u8bfbVIVO Key", None))
+        self.label_35.setText(QCoreApplication.translate("configEditWindow", u"\u5199\u8363\u8000Key", None))
+        self.label_41.setText(QCoreApplication.translate("configEditWindow", u"\u5199VIVO Key", None))
+        self.label_43.setText(QCoreApplication.translate("configEditWindow", u"\u5199Qi", None))
+        self.readHuaweiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.writeHuaweiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.readLuxQiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.getUIDDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_45.setText(QCoreApplication.translate("configEditWindow", u"\u8bfb\u7acb\u8bafQi", None))
+        self.label_34.setText(QCoreApplication.translate("configEditWindow", u"\u8bfb\u8363\u8000Key", None))
+        self.readQiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.writeLuxQiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_44.setText(QCoreApplication.translate("configEditWindow", u"\u5199\u7acb\u8bafQi", None))
+        self.writeQiDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_37.setText(QCoreApplication.translate("configEditWindow", u"\u5199\u5c0f\u7c73Key", None))
+        self.readXiaomiKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.writeOppoKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_33.setText(QCoreApplication.translate("configEditWindow", u"\u5199\u534e\u4e3aKey", None))
+        self.writeHonorKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_36.setText(QCoreApplication.translate("configEditWindow", u"\u8bfb\u5c0f\u7c73Key", None))
+        self.readOppoKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.readHonorKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.readVivoKeyDIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_32.setText(QCoreApplication.translate("configEditWindow", u"\u8bfb\u534e\u4e3aKey", None))
+        self.label_46.setText(QCoreApplication.translate("configEditWindow", u"\u4e0d\u9700\u5b9a\u4e49\u9879\u8bbe\u4e3a0x0000", None))
         self.NMConfigGroupBox.setTitle(QCoreApplication.translate("configEditWindow", u"\u7f51\u7edc\u7ba1\u7406\u62a5\u6587", None))
         self.nmEnabledCheckBox.setText(QCoreApplication.translate("configEditWindow", u"\u4f7f\u80fd", None))
         self.label_12.setText(QCoreApplication.translate("configEditWindow", u"\uff08\u76ee\u524d\u53ea\u652f\u63018\u548c64\u5b57\u8282\uff09", None))
+        self.label_8.setText(QCoreApplication.translate("configEditWindow", u"\u62a5\u6587ID", None))
+        self.NMIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
+        self.label_10.setText(QCoreApplication.translate("configEditWindow", u"ms", None))
+        self.label_9.setText(QCoreApplication.translate("configEditWindow", u"\u5468\u671f", None))
         self.label_11.setText(QCoreApplication.translate("configEditWindow", u"DLC", None))
         self.NMDLCcomboBox.setItemText(0, QCoreApplication.translate("configEditWindow", u"0", None))
         self.NMDLCcomboBox.setItemText(1, QCoreApplication.translate("configEditWindow", u"1", None))
@@ -614,178 +894,174 @@ class Ui_configEditWindow(object):
         self.NMDLCcomboBox.setItemText(14, QCoreApplication.translate("configEditWindow", u"14", None))
         self.NMDLCcomboBox.setItemText(15, QCoreApplication.translate("configEditWindow", u"15", None))
 
-        self.label_8.setText(QCoreApplication.translate("configEditWindow", u"\u62a5\u6587ID", None))
-        self.NMIDlineEdit.setText(QCoreApplication.translate("configEditWindow", u"0x", None))
-        self.label_10.setText(QCoreApplication.translate("configEditWindow", u"ms", None))
-        self.label_9.setText(QCoreApplication.translate("configEditWindow", u"\u5468\u671f", None))
         self.groupBox_5.setTitle("")
         self.readNMDataLineEdit.setInputMask("")
         self.readNMDataLineEdit.setText("")
         self.readNMDataLineEdit.setPlaceholderText(QCoreApplication.translate("configEditWindow", u"\u590d\u5236\u62a5\u6587\u5230\u8fd9\u91cc\u8fdb\u884c\u8bc6\u522b", None))
         self.recognizeNMDataButton.setText(QCoreApplication.translate("configEditWindow", u"\u8bc6\u522b\u62a5\u6587", None))
         ___qtablewidgetitem = self.NMDataTableWidget.horizontalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("configEditWindow", u"0", None));
+        ___qtablewidgetitem.setText(QCoreApplication.translate("configEditWindow", u"0", None))
         ___qtablewidgetitem1 = self.NMDataTableWidget.horizontalHeaderItem(1)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("configEditWindow", u"1", None));
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("configEditWindow", u"1", None))
         ___qtablewidgetitem2 = self.NMDataTableWidget.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("configEditWindow", u"2", None));
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("configEditWindow", u"2", None))
         ___qtablewidgetitem3 = self.NMDataTableWidget.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("configEditWindow", u"3", None));
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("configEditWindow", u"3", None))
         ___qtablewidgetitem4 = self.NMDataTableWidget.horizontalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("configEditWindow", u"4", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("configEditWindow", u"4", None))
         ___qtablewidgetitem5 = self.NMDataTableWidget.horizontalHeaderItem(5)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("configEditWindow", u"5", None));
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("configEditWindow", u"5", None))
         ___qtablewidgetitem6 = self.NMDataTableWidget.horizontalHeaderItem(6)
-        ___qtablewidgetitem6.setText(QCoreApplication.translate("configEditWindow", u"6", None));
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("configEditWindow", u"6", None))
         ___qtablewidgetitem7 = self.NMDataTableWidget.horizontalHeaderItem(7)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("configEditWindow", u"7", None));
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("configEditWindow", u"7", None))
         ___qtablewidgetitem8 = self.NMDataTableWidget.verticalHeaderItem(0)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("configEditWindow", u"0", None));
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("configEditWindow", u"0", None))
         ___qtablewidgetitem9 = self.NMDataTableWidget.verticalHeaderItem(1)
-        ___qtablewidgetitem9.setText(QCoreApplication.translate("configEditWindow", u"8", None));
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("configEditWindow", u"8", None))
         ___qtablewidgetitem10 = self.NMDataTableWidget.verticalHeaderItem(2)
-        ___qtablewidgetitem10.setText(QCoreApplication.translate("configEditWindow", u"16", None));
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("configEditWindow", u"16", None))
         ___qtablewidgetitem11 = self.NMDataTableWidget.verticalHeaderItem(3)
-        ___qtablewidgetitem11.setText(QCoreApplication.translate("configEditWindow", u"24", None));
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("configEditWindow", u"24", None))
         ___qtablewidgetitem12 = self.NMDataTableWidget.verticalHeaderItem(4)
-        ___qtablewidgetitem12.setText(QCoreApplication.translate("configEditWindow", u"32", None));
+        ___qtablewidgetitem12.setText(QCoreApplication.translate("configEditWindow", u"32", None))
         ___qtablewidgetitem13 = self.NMDataTableWidget.verticalHeaderItem(5)
-        ___qtablewidgetitem13.setText(QCoreApplication.translate("configEditWindow", u"40", None));
+        ___qtablewidgetitem13.setText(QCoreApplication.translate("configEditWindow", u"40", None))
         ___qtablewidgetitem14 = self.NMDataTableWidget.verticalHeaderItem(6)
-        ___qtablewidgetitem14.setText(QCoreApplication.translate("configEditWindow", u"48", None));
+        ___qtablewidgetitem14.setText(QCoreApplication.translate("configEditWindow", u"48", None))
         ___qtablewidgetitem15 = self.NMDataTableWidget.verticalHeaderItem(7)
-        ___qtablewidgetitem15.setText(QCoreApplication.translate("configEditWindow", u"56", None));
+        ___qtablewidgetitem15.setText(QCoreApplication.translate("configEditWindow", u"56", None))
 
         __sortingEnabled = self.NMDataTableWidget.isSortingEnabled()
         self.NMDataTableWidget.setSortingEnabled(False)
         ___qtablewidgetitem16 = self.NMDataTableWidget.item(0, 0)
-        ___qtablewidgetitem16.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem16.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem17 = self.NMDataTableWidget.item(0, 1)
-        ___qtablewidgetitem17.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem17.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem18 = self.NMDataTableWidget.item(0, 2)
-        ___qtablewidgetitem18.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem18.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem19 = self.NMDataTableWidget.item(0, 3)
-        ___qtablewidgetitem19.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem19.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem20 = self.NMDataTableWidget.item(0, 4)
-        ___qtablewidgetitem20.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem20.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem21 = self.NMDataTableWidget.item(0, 5)
-        ___qtablewidgetitem21.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem21.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem22 = self.NMDataTableWidget.item(0, 6)
-        ___qtablewidgetitem22.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem22.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem23 = self.NMDataTableWidget.item(0, 7)
-        ___qtablewidgetitem23.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem23.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem24 = self.NMDataTableWidget.item(1, 0)
-        ___qtablewidgetitem24.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem24.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem25 = self.NMDataTableWidget.item(1, 1)
-        ___qtablewidgetitem25.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem25.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem26 = self.NMDataTableWidget.item(1, 2)
-        ___qtablewidgetitem26.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem26.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem27 = self.NMDataTableWidget.item(1, 3)
-        ___qtablewidgetitem27.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem27.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem28 = self.NMDataTableWidget.item(1, 4)
-        ___qtablewidgetitem28.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem28.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem29 = self.NMDataTableWidget.item(1, 5)
-        ___qtablewidgetitem29.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem29.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem30 = self.NMDataTableWidget.item(1, 6)
-        ___qtablewidgetitem30.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem30.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem31 = self.NMDataTableWidget.item(1, 7)
-        ___qtablewidgetitem31.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem31.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem32 = self.NMDataTableWidget.item(2, 0)
-        ___qtablewidgetitem32.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem32.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem33 = self.NMDataTableWidget.item(2, 1)
-        ___qtablewidgetitem33.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem33.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem34 = self.NMDataTableWidget.item(2, 2)
-        ___qtablewidgetitem34.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem34.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem35 = self.NMDataTableWidget.item(2, 3)
-        ___qtablewidgetitem35.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem35.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem36 = self.NMDataTableWidget.item(2, 4)
-        ___qtablewidgetitem36.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem36.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem37 = self.NMDataTableWidget.item(2, 5)
-        ___qtablewidgetitem37.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem37.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem38 = self.NMDataTableWidget.item(2, 6)
-        ___qtablewidgetitem38.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem38.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem39 = self.NMDataTableWidget.item(2, 7)
-        ___qtablewidgetitem39.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem39.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem40 = self.NMDataTableWidget.item(3, 0)
-        ___qtablewidgetitem40.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem40.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem41 = self.NMDataTableWidget.item(3, 1)
-        ___qtablewidgetitem41.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem41.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem42 = self.NMDataTableWidget.item(3, 2)
-        ___qtablewidgetitem42.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem42.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem43 = self.NMDataTableWidget.item(3, 3)
-        ___qtablewidgetitem43.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem43.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem44 = self.NMDataTableWidget.item(3, 4)
-        ___qtablewidgetitem44.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem44.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem45 = self.NMDataTableWidget.item(3, 5)
-        ___qtablewidgetitem45.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem45.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem46 = self.NMDataTableWidget.item(3, 6)
-        ___qtablewidgetitem46.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem46.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem47 = self.NMDataTableWidget.item(3, 7)
-        ___qtablewidgetitem47.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem47.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem48 = self.NMDataTableWidget.item(4, 0)
-        ___qtablewidgetitem48.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem48.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem49 = self.NMDataTableWidget.item(4, 1)
-        ___qtablewidgetitem49.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem49.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem50 = self.NMDataTableWidget.item(4, 2)
-        ___qtablewidgetitem50.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem50.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem51 = self.NMDataTableWidget.item(4, 3)
-        ___qtablewidgetitem51.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem51.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem52 = self.NMDataTableWidget.item(4, 4)
-        ___qtablewidgetitem52.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem52.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem53 = self.NMDataTableWidget.item(4, 5)
-        ___qtablewidgetitem53.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem53.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem54 = self.NMDataTableWidget.item(4, 6)
-        ___qtablewidgetitem54.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem54.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem55 = self.NMDataTableWidget.item(4, 7)
-        ___qtablewidgetitem55.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem55.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem56 = self.NMDataTableWidget.item(5, 0)
-        ___qtablewidgetitem56.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem56.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem57 = self.NMDataTableWidget.item(5, 1)
-        ___qtablewidgetitem57.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem57.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem58 = self.NMDataTableWidget.item(5, 2)
-        ___qtablewidgetitem58.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem58.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem59 = self.NMDataTableWidget.item(5, 3)
-        ___qtablewidgetitem59.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem59.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem60 = self.NMDataTableWidget.item(5, 4)
-        ___qtablewidgetitem60.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem60.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem61 = self.NMDataTableWidget.item(5, 5)
-        ___qtablewidgetitem61.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem61.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem62 = self.NMDataTableWidget.item(5, 6)
-        ___qtablewidgetitem62.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem62.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem63 = self.NMDataTableWidget.item(5, 7)
-        ___qtablewidgetitem63.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem63.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem64 = self.NMDataTableWidget.item(6, 0)
-        ___qtablewidgetitem64.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem64.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem65 = self.NMDataTableWidget.item(6, 1)
-        ___qtablewidgetitem65.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem65.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem66 = self.NMDataTableWidget.item(6, 2)
-        ___qtablewidgetitem66.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem66.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem67 = self.NMDataTableWidget.item(6, 3)
-        ___qtablewidgetitem67.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem67.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem68 = self.NMDataTableWidget.item(6, 4)
-        ___qtablewidgetitem68.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem68.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem69 = self.NMDataTableWidget.item(6, 5)
-        ___qtablewidgetitem69.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem69.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem70 = self.NMDataTableWidget.item(6, 6)
-        ___qtablewidgetitem70.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem70.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem71 = self.NMDataTableWidget.item(6, 7)
-        ___qtablewidgetitem71.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem71.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem72 = self.NMDataTableWidget.item(7, 0)
-        ___qtablewidgetitem72.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem72.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem73 = self.NMDataTableWidget.item(7, 1)
-        ___qtablewidgetitem73.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem73.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem74 = self.NMDataTableWidget.item(7, 2)
-        ___qtablewidgetitem74.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem74.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem75 = self.NMDataTableWidget.item(7, 3)
-        ___qtablewidgetitem75.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem75.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem76 = self.NMDataTableWidget.item(7, 4)
-        ___qtablewidgetitem76.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem76.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem77 = self.NMDataTableWidget.item(7, 5)
-        ___qtablewidgetitem77.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem77.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem78 = self.NMDataTableWidget.item(7, 6)
-        ___qtablewidgetitem78.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem78.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         ___qtablewidgetitem79 = self.NMDataTableWidget.item(7, 7)
-        ___qtablewidgetitem79.setText(QCoreApplication.translate("configEditWindow", u"00", None));
+        ___qtablewidgetitem79.setText(QCoreApplication.translate("configEditWindow", u"00", None))
         self.NMDataTableWidget.setSortingEnabled(__sortingEnabled)
 
         self.FlashDriverGroupBox.setTitle(QCoreApplication.translate("configEditWindow", u"FlashDriver\uff08\u77fd\u529b\u6770\u82af\u7247\u534e\u4e3a\u8363\u8000key\u524d\u7f6e\u6761\u4ef6\uff09", None))

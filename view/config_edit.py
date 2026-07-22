@@ -75,6 +75,9 @@ class ConfigEditWindow(QMainWindow):
         self.internal_array = ["00"] * 64
         self.is_import_button_clicked = False  # 新增标志位
 
+        # 设置窗口最小高度，允许窗口缩小
+        self.setMinimumHeight(650)
+        
         self._setup_logo()
         self._connect_signals()
         self._init_table_and_delegate()
@@ -101,6 +104,10 @@ class ConfigEditWindow(QMainWindow):
         """连接信号和槽"""
         self.ui.typeComboBox.currentIndexChanged.connect(self.update_baudrate_settings)
         self.ui.NMDLCcomboBox.currentIndexChanged.connect(self.update_table_editable)
+        self.ui.cusdomKeyDIDcheckBox.stateChanged.connect(self._on_cusdom_key_did_checkbox_changed)
+        # 设置初始状态：默认不勾选，并应用初始界面逻辑
+        self.ui.cusdomKeyDIDcheckBox.setChecked(False)
+        self._on_cusdom_key_did_checkbox_changed(False)
 
     def _setup_default_settings(self):
         """设置默认选项"""
@@ -143,7 +150,23 @@ class ConfigEditWindow(QMainWindow):
             self.ui.getKeyStatusDIDlineEdit: [4],
             self.ui.readWriteKeyDIDlineEdit: [4],
             self.ui.getQiStatusDIDlineEdit: [4],
-            self.ui.NMIDlineEdit: [3, 4]            # [3,4,7]
+            self.ui.NMIDlineEdit: [3, 4],           # [3,4,7]
+            # keyDIDWidget 里的 lineEdit
+            self.ui.getUIDDIDlineEdit: [4],
+            self.ui.readHuaweiDIDlineEdit: [4],
+            self.ui.writeHuaweiDIDlineEdit: [4],
+            self.ui.readXiaomiKeyDIDlineEdit: [4],
+            self.ui.writeXiaomiKeyDIDlineEdit: [4],
+            self.ui.readHonorKeyDIDlineEdit: [4],
+            self.ui.writeHonorKeyDIDlineEdit: [4],
+            self.ui.readQiDIDlineEdit: [4],
+            self.ui.writeQiDIDlineEdit: [4],
+            self.ui.readOppoKeyDIDlineEdit: [4],
+            self.ui.writeOppoKeyDIDlineEdit: [4],
+            self.ui.readLuxQiDIDlineEdit: [4],
+            self.ui.writeLuxQiDIDlineEdit: [4],
+            self.ui.readVivoKeyDIDlineEdit: [4],
+            self.ui.writeVivoKeyDIDlineEdit: [4],
         }
 
         # 设置 requestIDlineEdit，responseIDlineEdit，qiTransmitIDlineEdit 的验证规则和编辑结束处理
@@ -539,6 +562,42 @@ class ConfigEditWindow(QMainWindow):
             flash_driver_name = flash_driver_config.get(ValidValues.FLASH_DRIVER_NAME_KEY, '')
             self.ui.FlashDriverNameLineEdit.setText(flash_driver_name)
         # 如果不存在 FlashDriver 配置，也不报错，保持界面原样
+        
+        # ============================================
+        # CUSTOM_DID_SECTION 处理部分（keyDIDWidget 配置）
+        # ============================================
+        def fill_custom_did_line_edit(line_edit, value):
+            """填充 custom_did 的 lineEdit，0x0、0x0000、0 留空"""
+            if value in [0, '0x0', '0x0000']:
+                line_edit.setText('')
+            elif isinstance(value, int):
+                line_edit.setText(f'0x{value:04X}')
+            else:
+                line_edit.setText(value)
+        
+        custom_did = config.get(ValidValues.CUSTOM_DID_SECTION, {})
+        if custom_did:
+            # 先填充 custom_did 配置到 keyDIDWidget 的 lineEdit
+            fill_custom_did_line_edit(self.ui.getUIDDIDlineEdit, custom_did.get(ValidValues.GET_UID_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readHuaweiDIDlineEdit, custom_did.get(ValidValues.HUAWEI_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeHuaweiDIDlineEdit, custom_did.get(ValidValues.HUAWEI_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readXiaomiKeyDIDlineEdit, custom_did.get(ValidValues.XIAOMI_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeXiaomiKeyDIDlineEdit, custom_did.get(ValidValues.XIAOMI_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readHonorKeyDIDlineEdit, custom_did.get(ValidValues.HONOR_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeHonorKeyDIDlineEdit, custom_did.get(ValidValues.HONOR_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readQiDIDlineEdit, custom_did.get(ValidValues.QI_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeQiDIDlineEdit, custom_did.get(ValidValues.QI_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readOppoKeyDIDlineEdit, custom_did.get(ValidValues.OPPO_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeOppoKeyDIDlineEdit, custom_did.get(ValidValues.OPPO_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readLuxQiDIDlineEdit, custom_did.get(ValidValues.LUXQI_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeLuxQiDIDlineEdit, custom_did.get(ValidValues.LUXQI_WRITE_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.readVivoKeyDIDlineEdit, custom_did.get(ValidValues.VIVO_READ_DID_KEY, 0))
+            fill_custom_did_line_edit(self.ui.writeVivoKeyDIDlineEdit, custom_did.get(ValidValues.VIVO_WRITE_DID_KEY, 0))
+            
+            # 最后勾选 cusdomKeyDIDcheckBox，触发 _on_cusdom_key_did_checkbox_changed 执行高度调整和界面更新
+            if not self.ui.cusdomKeyDIDcheckBox.isChecked():
+                self.ui.cusdomKeyDIDcheckBox.setChecked(True)
+        # 如果不存在 custom_did 配置，也不报错，保持界面原样
 
         logger.debug("填充配置到界面完成，日志信息: %s", fill_log)
         return fill_log
@@ -603,7 +662,21 @@ class ConfigEditWindow(QMainWindow):
         }
         
         # 指定需要移除引号的 key
-        keys_to_remove_quotes = [ValidValues.REQUEST_ID_KEY, ValidValues.RESPONSE_ID_KEY, ValidValues.GET_KEY_STATUS_KEY, ValidValues.READ_WRITE_KEY_KEY, ValidValues.QI_TRANSMIT_ID_KEY, ValidValues.QI_RECEIVE_ID_KEY, ValidValues.GET_QI_STATUS_KEY, ValidValues.NM_ID_KEY]
+        keys_to_remove_quotes = [
+            ValidValues.REQUEST_ID_KEY, ValidValues.RESPONSE_ID_KEY, 
+            ValidValues.GET_KEY_STATUS_KEY, ValidValues.READ_WRITE_KEY_KEY, 
+            ValidValues.QI_TRANSMIT_ID_KEY, ValidValues.QI_RECEIVE_ID_KEY, 
+            ValidValues.GET_QI_STATUS_KEY, ValidValues.NM_ID_KEY,
+            # custom_did 的所有 DID
+            ValidValues.GET_UID_DID_KEY, ValidValues.HUAWEI_READ_DID_KEY,
+            ValidValues.HUAWEI_WRITE_DID_KEY, ValidValues.XIAOMI_READ_DID_KEY,
+            ValidValues.XIAOMI_WRITE_DID_KEY, ValidValues.HONOR_READ_DID_KEY,
+            ValidValues.HONOR_WRITE_DID_KEY, ValidValues.QI_READ_DID_KEY,
+            ValidValues.QI_WRITE_DID_KEY, ValidValues.OPPO_READ_DID_KEY,
+            ValidValues.OPPO_WRITE_DID_KEY, ValidValues.LUXQI_READ_DID_KEY,
+            ValidValues.LUXQI_WRITE_DID_KEY, ValidValues.VIVO_READ_DID_KEY,
+            ValidValues.VIVO_WRITE_DID_KEY,
+        ]
 
         def remove_quotes(line, key):
             if key in keys_to_remove_quotes:
@@ -660,11 +733,22 @@ class ConfigEditWindow(QMainWindow):
                 nm_period = 100
                 self.ui.NMPeriodLineEdit.setText("100")
         
-        # 定义一个函数处理十六进制输入
+        # 定义函数处理十六进制输入
         def handle_hex_input(text):
+            """处理标准 DID 输入，空或 0x 返回 0x0"""
             if text in ['0x', '']:
                 return '0x0'
             return text
+        
+        def handle_custom_did_input(text):
+            """处理 custom_did 的 DID 输入，无效值返回 0x0000"""
+            # 去掉 0x 前缀
+            hex_part = text[2:] if text.startswith('0x') else text
+            # 检查是否为 1-4 个十六进制字符
+            if len(hex_part) >= 1 and len(hex_part) <= 4 and all(c in '0123456789ABCDEFabcdef' for c in hex_part):
+                # 补前导 0 到 4 位
+                return '0x' + hex_part.upper().zfill(4)
+            return '0x0000'
         
         config = {
             ValidValues.CAN_CONFIG_SECTION: {
@@ -693,6 +777,27 @@ class ConfigEditWindow(QMainWindow):
                 ValidValues.FLASH_DRIVER_NAME_KEY: self.ui.FlashDriverNameLineEdit.text()
             }
         }
+        
+        # 如果勾选了 cusdomKeyDIDcheckBox，保存 custom_did 配置
+        if self.ui.cusdomKeyDIDcheckBox.isChecked():
+            config[ValidValues.CUSTOM_DID_SECTION] = {
+                ValidValues.GET_UID_DID_KEY: handle_custom_did_input(self.ui.getUIDDIDlineEdit.text()),
+                ValidValues.HUAWEI_READ_DID_KEY: handle_custom_did_input(self.ui.readHuaweiDIDlineEdit.text()),
+                ValidValues.HUAWEI_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeHuaweiDIDlineEdit.text()),
+                ValidValues.XIAOMI_READ_DID_KEY: handle_custom_did_input(self.ui.readXiaomiKeyDIDlineEdit.text()),
+                ValidValues.XIAOMI_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeXiaomiKeyDIDlineEdit.text()),
+                ValidValues.HONOR_READ_DID_KEY: handle_custom_did_input(self.ui.readHonorKeyDIDlineEdit.text()),
+                ValidValues.HONOR_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeHonorKeyDIDlineEdit.text()),
+                ValidValues.QI_READ_DID_KEY: handle_custom_did_input(self.ui.readQiDIDlineEdit.text()),
+                ValidValues.QI_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeQiDIDlineEdit.text()),
+                ValidValues.OPPO_READ_DID_KEY: handle_custom_did_input(self.ui.readOppoKeyDIDlineEdit.text()),
+                ValidValues.OPPO_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeOppoKeyDIDlineEdit.text()),
+                ValidValues.LUXQI_READ_DID_KEY: handle_custom_did_input(self.ui.readLuxQiDIDlineEdit.text()),
+                ValidValues.LUXQI_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeLuxQiDIDlineEdit.text()),
+                ValidValues.VIVO_READ_DID_KEY: handle_custom_did_input(self.ui.readVivoKeyDIDlineEdit.text()),
+                ValidValues.VIVO_WRITE_DID_KEY: handle_custom_did_input(self.ui.writeVivoKeyDIDlineEdit.text()),
+            }
+        
         return config
 
     def _get_nm_message_from_table(self):
@@ -726,6 +831,61 @@ class ConfigEditWindow(QMainWindow):
         else:
             # 恢复系统默认颜色
             status_bar.setStyleSheet('')
+
+    def _on_cusdom_key_did_checkbox_changed(self, state):
+        """
+        处理 cusdomKeyDIDcheckBox 状态变化
+        - 勾选时：readWriteKeyDIDlineEdit 和 getQiStatusDIDlineEdit 为 disable，keyDIDWidget 保持可见
+        - 不勾选时：readWriteKeyDIDlineEdit 和 getQiStatusDIDlineEdit 为 enable，keyDIDWidget 为不可见，清空 custom_did 输入
+        - 勾选时：高度至少 850
+        - 不勾选时：高度最多 700
+        """
+        is_checked = bool(state)
+        
+        # 设置 readWriteKeyDIDlineEdit 和 getQiStatusDIDlineEdit 的启用状态
+        self.ui.readWriteKeyDIDlineEdit.setEnabled(not is_checked)
+        self.ui.getQiStatusDIDlineEdit.setEnabled(not is_checked)
+        
+        # 设置 keyDIDWidget 的可见性（不勾选时隐藏）
+        self.ui.keyDIDWidget.setVisible(is_checked)
+        
+        # 取消勾选时清空所有 custom_did 的 lineEdit，显示 0x 提示
+        if not is_checked:
+            self.ui.getUIDDIDlineEdit.setText('0x')
+            self.ui.readHuaweiDIDlineEdit.setText('0x')
+            self.ui.writeHuaweiDIDlineEdit.setText('0x')
+            self.ui.readXiaomiKeyDIDlineEdit.setText('0x')
+            self.ui.writeXiaomiKeyDIDlineEdit.setText('0x')
+            self.ui.readHonorKeyDIDlineEdit.setText('0x')
+            self.ui.writeHonorKeyDIDlineEdit.setText('0x')
+            self.ui.readQiDIDlineEdit.setText('0x')
+            self.ui.writeQiDIDlineEdit.setText('0x')
+            self.ui.readOppoKeyDIDlineEdit.setText('0x')
+            self.ui.writeOppoKeyDIDlineEdit.setText('0x')
+            self.ui.readLuxQiDIDlineEdit.setText('0x')
+            self.ui.writeLuxQiDIDlineEdit.setText('0x')
+            self.ui.readVivoKeyDIDlineEdit.setText('0x')
+            self.ui.writeVivoKeyDIDlineEdit.setText('0x')
+        
+        # 获取当前尺寸
+        current_width = self.width()
+        current_height = self.height()
+        print(f"[调试] 勾选状态变化前 - 宽度: {current_width}, 高度: {current_height}")
+        
+        if is_checked:
+            # 勾选时：显示 keyDIDWidget，高度至少 850
+            new_height = max(850, current_height + 150)
+        else:
+            # 不勾选时：隐藏 keyDIDWidget，高度最多 700
+            new_height = max(700, current_height - 150)
+        
+        # 固定宽度，只调整高度
+        self.resize(current_width, new_height)
+        
+        # 打印调整后的尺寸
+        final_width = self.width()
+        final_height = self.height()
+        print(f"[调试] 勾选状态变化后 - 宽度: {final_width}, 高度: {final_height}, keyDIDWidget可见: {self.ui.keyDIDWidget.isVisible()}")
 
     def closeEvent(self, event):
         """重写关闭事件"""

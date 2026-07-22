@@ -89,27 +89,22 @@ class SerialModel(QObject):
                 if not self.expect_response:
                     self.log_buffer.extend(data)
                 self.data_buffer.extend(data)
-                # logger.debug('当前缓冲区数据：[%s]', utils.byte_array_to_hex_string(self.data_buffer))
-           
+
         discard_info = None  # 丢弃信息，默认为 None
-        
+
         # 尝试解析缓冲区中的数据，接收完整数据的超时时间设为1s
         if self.expect_response and len(self.data_buffer) >= MIN_DATA_LENGTH:
-            # logger.debug('开始尝试解析数据')
             serial_message, message_status = SerialMessage.from_serial_data(self.data_buffer)
-            # logger.debug('解析结果serial_message：%s', serial_message)
-            # logger.debug('解析结果message_status：%s', message_status)
             if serial_message:
                 # 解析成功，移除已解析的数据
                 parsed_length = serial_message.data_length
                 with self.buffer_lock:
-                    
                     self.receive_buffer.append({
                         'data': self.data_buffer[:parsed_length],
-                        'timestamp': self.last_receive_time  # 时间戳
+                        'timestamp': self.last_receive_time
                     })
-                    # self.receive_buffer = self.data_buffer[:parsed_length]
                     self.data_buffer = self.data_buffer[parsed_length:]
+                    # 注意：不再从 log_buffer 移除数据，因为日志缓冲区是独立的追加队列
                 logger.debug('解析结果serial_message：%s', serial_message)
                 return serial_message  # 返回解析后的数据用于后续处理
             else:
@@ -127,7 +122,7 @@ class SerialModel(QObject):
                                     'reason': f'校验失败[{message_status}]'
                                 }
                                 logger.warning('丢弃无效数据%d字节', len(discarded_data))
-                        
+
                             self.data_buffer = self.data_buffer[i:]
                             break
                     else:
@@ -141,15 +136,10 @@ class SerialModel(QObject):
                             }
                             logger.warning('丢弃无效数据%d字节', len(discarded_data))
                         self.data_buffer = bytearray()
-                else:  
+                else:
                     logger.debug('尝试解析数据失败，返回%s，准备接收下一个数据', message_status)
-                    header_start_time = time.time()
                 logger.debug('当前缓冲区数据：[%s]', utils.byte_array_to_hex_string(self.data_buffer))
-                    
-        else:
-            # expect_response=True 且数据不足以解析时，临时写入 log_buffer
-            # （expect_response=False 时 log_buffer 已在上面写过，不要重复写）
-            pass
+
         if discard_info:
             self.data_discarded_signal.emit(discard_info)
         return None

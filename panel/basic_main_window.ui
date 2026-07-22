@@ -200,7 +200,7 @@
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
             <widget class="QWidget" name="widget_3" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <layout class="QGridLayout" name="gridLayout_2">
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -213,17 +213,17 @@
               <property name="bottomMargin">
                <number>0</number>
               </property>
-              <item>
-               <widget class="QPushButton" name="getSwVerButton">
+              <item row="0" column="3">
+               <widget class="QPushButton" name="getConfigButton">
                 <property name="toolTip">
-                 <string>读密钥下载工具硬件版本号</string>
+                 <string>读取密钥下载工具当前设置</string>
                 </property>
                 <property name="text">
-                 <string>读软件版本号</string>
+                 <string>读取配置</string>
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="1">
                <widget class="QPushButton" name="resetButton">
                 <property name="toolTip">
                  <string>密钥下载工具执行复位</string>
@@ -233,7 +233,40 @@
                 </property>
                </widget>
               </item>
-              <item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="getSwVerButton">
+                <property name="toolTip">
+                 <string>读密钥下载工具硬件版本号</string>
+                </property>
+                <property name="text">
+                 <string>读软件版本号</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QPushButton" name="inputFlashDriverButton">
+                <property name="toolTip">
+                 <string>仅矽力杰平台芯片使用，导入FlashDriver文件到黑盒子，若配置文件中无FlashDriver相关则无法配置成功</string>
+                </property>
+                <property name="text">
+                 <string>导入FlashDriver</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="6">
+               <widget class="QPushButton" name="oneKeyButton">
+                <property name="toolTip">
+                 <string>配置参数，打印读取参数</string>
+                </property>
+                <property name="text">
+                 <string>一键配置</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
                <widget class="QPushButton" name="setConfigButton">
                 <property name="mouseTracking">
                  <bool>false</bool>
@@ -246,27 +279,7 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="getConfigButton">
-                <property name="toolTip">
-                 <string>读取密钥下载工具当前设置</string>
-                </property>
-                <property name="text">
-                 <string>读取配置</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="inputFlashDriverButton">
-                <property name="toolTip">
-                 <string>仅矽力杰平台芯片使用，导入FlashDriver文件到黑盒子，若配置文件中无FlashDriver相关则无法配置成功</string>
-                </property>
-                <property name="text">
-                 <string>导入FlashDriver</string>
-                </property>
-               </widget>
-              </item>
-              <item>
+              <item row="0" column="5">
                <spacer name="horizontalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Horizontal</enum>
@@ -279,16 +292,23 @@
                 </property>
                </spacer>
               </item>
-              <item>
-               <widget class="QPushButton" name="oneKeyButton">
+              <item row="1" column="0">
+               <widget class="QPushButton" name="setKeyDIDButton">
                 <property name="toolTip">
-                 <string>配置参数，打印读取参数</string>
+                 <string>密钥下载工具执行复位</string>
                 </property>
                 <property name="text">
-                 <string>一键配置</string>
+                 <string>配置DID</string>
                 </property>
-                <property name="icon">
-                 <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="getKeyDIDButton">
+                <property name="toolTip">
+                 <string>密钥下载工具执行复位</string>
+                </property>
+                <property name="text">
+                 <string>读取DID</string>
                 </property>
                </widget>
               </item>
