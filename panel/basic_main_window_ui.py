@@ -163,6 +163,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.getKeyDIDButton, 1, 1, 1, 1)
 
+        self.resetKeyDIDButton = QPushButton(self.widget_3)
+        self.resetKeyDIDButton.setObjectName(u"resetKeyDIDButton")
+
+        self.gridLayout_2.addWidget(self.resetKeyDIDButton, 1, 2, 1, 1)
+
 
         self.verticalLayout_5.addWidget(self.widget_3)
 
@@ -549,7 +554,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.inputFlashDriverButton.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165FlashDriver", None))
 #if QT_CONFIG(tooltip)
-        self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570", None))
+        self.oneKeyButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u53c2\u6570\uff0c\u6253\u5370\u8bfb\u53d6\u53c2\u6570\uff0c\u5982\u679cconfig\u6587\u4ef6\u4e2d\u914d\u7f6e\u4e86\uff0c\u914d\u7f6eDID\uff0c\u5bfc\u5165FlashDriver", None))
 #endif // QT_CONFIG(tooltip)
         self.oneKeyButton.setText(QCoreApplication.translate("MainWindow", u"\u4e00\u952e\u914d\u7f6e", None))
 #if QT_CONFIG(tooltip)
@@ -557,13 +562,17 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.setConfigButton.setText(QCoreApplication.translate("MainWindow", u"\u53c2\u6570\u914d\u7f6e", None))
 #if QT_CONFIG(tooltip)
-        self.setKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u6267\u884c\u590d\u4f4d", None))
+        self.setKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e\u8bfb\u53d6uid\u548c\u5bc6\u94a5\u8bfb\u5199did\uff08072/073\u9879\u76ee\uff09", None))
 #endif // QT_CONFIG(tooltip)
         self.setKeyDIDButton.setText(QCoreApplication.translate("MainWindow", u"\u914d\u7f6eDID", None))
 #if QT_CONFIG(tooltip)
-        self.getKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u5bc6\u94a5\u4e0b\u8f7d\u5de5\u5177\u6267\u884c\u590d\u4f4d", None))
+        self.getKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u81ea\u5b9a\u4e49\u5bc6\u94a5did", None))
 #endif // QT_CONFIG(tooltip)
         self.getKeyDIDButton.setText(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6DID", None))
+#if QT_CONFIG(tooltip)
+        self.resetKeyDIDButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u91cd\u7f6edid", None))
+#endif // QT_CONFIG(tooltip)
+        self.resetKeyDIDButton.setText(QCoreApplication.translate("MainWindow", u"\u91cd\u7f6eDID", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c", None))
 #if QT_CONFIG(tooltip)
         self.getKeyStatusButton.setToolTip(QCoreApplication.translate("MainWindow", u"\u8bfb\u53d6\u5bc6\u94a5\u72b6\u6001", None))

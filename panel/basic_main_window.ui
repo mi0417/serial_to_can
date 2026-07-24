@@ -256,7 +256,7 @@
               <item row="0" column="6">
                <widget class="QPushButton" name="oneKeyButton">
                 <property name="toolTip">
-                 <string>配置参数，打印读取参数</string>
+                 <string>配置参数，打印读取参数，如果config文件中配置了，配置DID，导入FlashDriver</string>
                 </property>
                 <property name="text">
                  <string>一键配置</string>
@@ -295,7 +295,7 @@
               <item row="1" column="0">
                <widget class="QPushButton" name="setKeyDIDButton">
                 <property name="toolTip">
-                 <string>密钥下载工具执行复位</string>
+                 <string>配置读取uid和密钥读写did（072/073项目）</string>
                 </property>
                 <property name="text">
                  <string>配置DID</string>
@@ -305,10 +305,20 @@
               <item row="1" column="1">
                <widget class="QPushButton" name="getKeyDIDButton">
                 <property name="toolTip">
-                 <string>密钥下载工具执行复位</string>
+                 <string>读取自定义密钥did</string>
                 </property>
                 <property name="text">
                  <string>读取DID</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="resetKeyDIDButton">
+                <property name="toolTip">
+                 <string>重置did</string>
+                </property>
+                <property name="text">
+                 <string>重置DID</string>
                 </property>
                </widget>
               </item>

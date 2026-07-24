@@ -12,8 +12,8 @@ from PySide6.QtWidgets import QDialog
 from model import SerialModel
 from view.view import View
 
-from utils.data_processor import ConfigParams
-from utils.file_utils import exe_absolute_path, is_file_exists
+from utils.data_processor import ConfigParams, ValidValues
+from utils.file_utils import exe_absolute_path, is_file_exists, read_toml_file
 from utils.common_data_utils import byte_array_to_hex_string, format_timestamp
 from utils.flash_driver import get_file_path_from_config
 logger = logging.getLogger(__name__)
@@ -35,6 +35,8 @@ class SerialCommunicationThread(QThread):
     get_uid_result_signal = Signal(bytearray)  # (uid_str, error_msg) - uid_str为None表示失败
     write_qi_key_result_signal = Signal(bool, str)  # (success, error_msg)
     send_flash_driver_result_signal = Signal(bool, str)  # (success, error_msg)
+    set_key_did_result_signal = Signal(bool, str)  # (success, message)
+    get_key_did_result_signal = Signal(object, str)  # (result_dict, message) - 使用 object 避免 Shiboken 类型转换错误
 
     # 请求队列
     _request_queue = queue.Queue()
@@ -306,6 +308,42 @@ class SerialCommunicationThread(QThread):
             'callback': _callback
         })
 
+    def set_key_did(self, did_list=None):
+        '''
+        设置 Key DID
+        :param did_list: 15个DID值列表，如果为None则使用model内部默认值
+        '''
+        def _callback(result):
+            if result is not None and result[0] is None and result[1] is None:
+                self.set_key_did_result_signal.emit(False, '设置失败')
+            else:
+                self.set_key_did_result_signal.emit(result[0], result[1])
+        
+        # 将did_list加入请求参数
+        req = {
+            'method': 'set_key_did',
+            'callback': _callback
+        }
+        if did_list is not None:
+            req['args'] = [did_list]
+        
+        self._request_queue.put(req)
+
+    def get_key_did(self):
+        '''
+        获取 Key DID
+        '''
+        def _callback(result):
+            if result is not None and result[0] is None and result[1] is None:
+                self.get_key_did_result_signal.emit(None, '读取失败')
+            else:
+                self.get_key_did_result_signal.emit(result[0], result[1])
+        
+        self._request_queue.put({
+            'method': 'get_key_did',
+            'callback': _callback
+        })
+
 
     def send_data(self, data):
         '''
@@ -367,6 +405,9 @@ class Controller(QObject):
         self.view.ui.getUIDButton.clicked.connect(self.get_uid)
         self.view.ui.writeLuxQiButton.clicked.connect(self.write_qi_key)
         self.view.ui.sendFlashDriverButton.clicked.connect(self.send_flash_driver)
+        self.view.ui.setKeyDIDButton.clicked.connect(self.set_key_did)
+        self.view.ui.getKeyDIDButton.clicked.connect(self.get_key_did)
+        self.view.ui.resetKeyDIDButton.clicked.connect(self.reset_key_did)
 
     def toggle_serial(self):
         port = self.view.ui.serialBox.currentText()
@@ -404,6 +445,8 @@ class Controller(QObject):
                 self.serial_thread.get_uid_result_signal.connect(self.handle_get_uid_result)
                 self.serial_thread.write_qi_key_result_signal.connect(self.handle_write_qi_key_result)
                 self.serial_thread.send_flash_driver_result_signal.connect(self.handle_send_flash_driver_result)
+                self.serial_thread.set_key_did_result_signal.connect(self.on_set_key_did_result)
+                self.serial_thread.get_key_did_result_signal.connect(self.on_get_key_did_result)
                 
                 self.model.data_discarded_signal.connect(self.on_data_discarded)
             self.serial_thread.restart(port_name)
@@ -566,6 +609,63 @@ class Controller(QObject):
             self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
             logger.error('串口未打开')
 
+    def _prepare_custom_did_config(self):
+        """
+        准备自定义 DID 配置。
+        从配置文件中读取 custom_did 配置组，检查是否有效（不全为0x0000）。
+        :return: did_list 如果有效，否则返回 None
+        """
+        if not is_file_exists(self.view.config_path):
+            logger.warning('配置文件不存在，跳过 custom_did 配置')
+            return None
+        
+        config = read_toml_file(self.view.config_path)
+        if ValidValues.CUSTOM_DID_SECTION not in config:
+            logger.info('配置文件中未设置 custom_did 配置组，跳过')
+            return None
+        
+        custom_did = config.get(ValidValues.CUSTOM_DID_SECTION, {})
+        
+        def parse_hex(hex_str, default='0x0000'):
+            try:
+                value = custom_did.get(hex_str, default)
+                if isinstance(value, int):
+                    return value
+                value = value.strip().lower()
+                if not value.startswith('0x'):
+                    value = '0x' + value
+                return int(value, 16)
+            except (ValueError, AttributeError) as e:
+                logger.warning('解析十六进制失败 [%s]: %s，使用默认值0x0000', hex_str, e)
+                return 0
+        
+        did_list = [
+            parse_hex(ValidValues.GET_UID_DID_KEY),
+            parse_hex(ValidValues.HUAWEI_READ_DID_KEY),
+            parse_hex(ValidValues.HUAWEI_WRITE_DID_KEY),
+            parse_hex(ValidValues.HONOR_READ_DID_KEY),
+            parse_hex(ValidValues.HONOR_WRITE_DID_KEY),
+            parse_hex(ValidValues.XIAOMI_READ_DID_KEY),
+            parse_hex(ValidValues.XIAOMI_WRITE_DID_KEY),
+            parse_hex(ValidValues.OPPO_READ_DID_KEY),
+            parse_hex(ValidValues.OPPO_WRITE_DID_KEY),
+            parse_hex(ValidValues.VIVO_READ_DID_KEY),
+            parse_hex(ValidValues.VIVO_WRITE_DID_KEY),
+            parse_hex(ValidValues.QI_READ_DID_KEY),
+            parse_hex(ValidValues.QI_WRITE_DID_KEY),
+            parse_hex(ValidValues.LUXQI_READ_DID_KEY),
+            parse_hex(ValidValues.LUXQI_WRITE_DID_KEY),
+        ]
+        
+        # 检查是否不全为 0x0000（至少有一个 DID 值不是 0x0000）
+        has_valid_did = any(did != 0x0000 for did in did_list)
+        if not has_valid_did:
+            logger.info('custom_did 所有值均为 0x0000，跳过配置')
+            return None
+        
+        logger.info('从配置文件读取的 DID 列表: %s', did_list)
+        return did_list
+
     def handle_read_config_result(self, result, message):
         '''
         处理读取配置结果信号
@@ -577,7 +677,16 @@ class Controller(QObject):
             self.view.append_to_output_widget(f'配置信息\n{result}', self.view.LOG_TYPE_DATA)
 
             if self.one_key_config_running:
-                # 一键配置流程：读取成功后检查是否需要下载 FlashDriver
+                # 一键配置流程：读取成功后检查是否需要配置自定义 DID
+                did_list = self._prepare_custom_did_config()
+                if did_list:
+                    # 有有效的 custom_did 配置，先配置 DID
+                    self.view.append_to_output_widget('检测到自定义 DID 配置，开始配置...', self.view.LOG_TYPE_INFO)
+                    self.serial_thread.set_key_did(did_list)
+                    # 保持信号连接，让结果路由到 on_set_key_did_result
+                    return
+                
+                # 无需配置 DID，直接检查是否需要下载 FlashDriver
                 flash_driver_path = get_file_path_from_config(self.view.config_path)
                 if flash_driver_path:
                     self.view.append_to_output_widget('开始下载 FlashDriver...', self.view.LOG_TYPE_INFO)
@@ -673,17 +782,24 @@ class Controller(QObject):
 
     def handle_get_uid_result(self, uid_str):
         '''处理读取UID结果'''
+        # 检查是否是有效 UID（非 None、非空、非 "error" 字符串）
+        is_valid_uid = uid_str and uid_str != SerialCommunicationThread.EMIT_STR_ERROR
 
-        self.view.enable_operation_buttons()
-        if uid_str:
+        if is_valid_uid:
             self.view.append_to_output_widget(f'读取UID成功 {uid_str}', self.view.LOG_TYPE_DATA)
-            
+
             # 检查是否是写Qi密钥流程中的UID获取
             if self._write_qi_key_uid_callback:
-                self._write_qi_key_uid_callback = None
+                # 不在这里恢复按钮，由 _handle_write_qi_key_get_uid_result 处理后续逻辑
                 self._handle_write_qi_key_get_uid_result(uid_str)
+            else:
+                # 普通UID读取流程，恢复按钮
+                self.view.enable_operation_buttons()
         else:
             self.view.append_to_output_widget(f'读取UID失败', self.view.LOG_TYPE_ERROR)
+            # UID失败时清除标志并恢复按钮
+            self._write_qi_key_uid_callback = None
+            self.view.enable_operation_buttons()
 
     def write_qi_key(self):
         '''
@@ -731,6 +847,8 @@ class Controller(QObject):
                 if dialog.exec() == QDialog.Accepted:
                     token = dialog.get_token()
                     if token:
+                        # 登录成功后立即保存 token 到配置文件
+                        self.view.save_last_config()
                         # 重新获取密钥
                         success, message, key = self.view.api_client.get_encryption_key(uid_str, token)
                         if not success:
@@ -742,7 +860,7 @@ class Controller(QObject):
                         self._write_qi_key_uid_callback = None
                         return
                 else:
-                    self.view.append_to_output_widget('未登录，操作取消', self.view.LOG_TYPE_WARN)
+                    self.view.append_to_output_widget('未登录，操作取消', self.view.LOG_TYPE_WARNING)
                     self.view.enable_operation_buttons()
                     self._write_qi_key_uid_callback = None
                     return
@@ -843,6 +961,153 @@ class Controller(QObject):
 
         else:
             self.view.append_to_output_widget(f'获取密钥状态失败, {message}', self.view.LOG_TYPE_ERROR)
+        self.view.enable_operation_buttons()
+
+    def set_key_did(self):
+        '''
+        设置 Key DID 按钮点击处理
+        15个DID顺序：
+        0-读UID (get_uid_did), 1-读华为 (huawei_read_did), 2-写华为 (huawei_write_did),
+        3-读荣耀 (honor_read_did), 4-写荣耀 (honor_write_did),
+        5-读小米 (xiaomi_read_did), 6-写小米 (xiaomi_write_did),
+        7-读oppo (oppo_read_did), 8-写oppo (oppo_write_did),
+        9-读vivo (vivo_read_did), 10-写vivo (vivo_write_did),
+        11-读qi (qi_read_did), 12-写qi (qi_write_did),
+        13-读立讯qi (luxqi_read_did), 14-写立讯qi (luxqi_write_did)
+        '''
+        logger.info('点击设置 Key DID 按钮')
+
+        # 使用公共方法获取 DID 配置
+        did_list = self._prepare_custom_did_config()
+        if did_list is None:
+            self.view.append_to_output_widget('请先配置自定义DID', self.view.LOG_TYPE_ERROR)
+            logger.warning('配置文件中未设置自定义密钥DID')
+            return
+
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.setKeyDIDButton.text(), self.view.LOG_TYPE_INFO)
+            self.serial_thread.set_key_did(did_list)
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def reset_key_did(self):
+        '''
+        重置 Key DID 按钮点击处理
+        功能：将所有15个DID设置为0
+        15个DID顺序：
+        0-读UID, 1-读华为, 2-写华为, 3-读荣耀, 4-写荣耀,
+        5-读小米, 6-写小米, 7-读oppo, 8-写oppo,
+        9-读vivo, 10-写vivo, 11-读qi, 12-写qi,
+        13-读立讯qi, 14-写立讯qi
+        '''
+        logger.info('点击重置 Key DID 按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.resetKeyDIDButton.text(), self.view.LOG_TYPE_INFO)
+            # 所有15个DID设置为0
+            did_list = [0] * 15
+            self.serial_thread.set_key_did(did_list)
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def on_set_key_did_result(self, success, message):
+        '''
+        处理设置 Key DID 结果信号
+        :param success: 设置是否成功
+        :param message: 结果消息
+        '''
+        if not self.one_key_config_running:
+            # 普通流程：恢复按钮
+            if success:
+                self.view.append_to_output_widget('设置 Key DID 成功', self.view.LOG_TYPE_INFO)
+            else:
+                self.view.append_to_output_widget(f'设置 Key DID 失败, {message}', self.view.LOG_TYPE_ERROR)
+            self.view.enable_operation_buttons()
+            return
+
+        # 一键配置流程：DID 配置成功，继续下载 FlashDriver
+        if success:
+            self.view.append_to_output_widget('自定义 DID 配置成功', self.view.LOG_TYPE_INFO)
+        else:
+            self.view.append_to_output_widget(f'自定义 DID 配置失败: {message}', self.view.LOG_TYPE_ERROR)
+            self.one_key_config_running = False
+            self.view.enable_operation_buttons()
+            return
+
+        # 继续下载 FlashDriver
+        flash_driver_path = get_file_path_from_config(self.view.config_path)
+        if flash_driver_path:
+            self.view.append_to_output_widget('开始下载 FlashDriver...', self.view.LOG_TYPE_INFO)
+            self.serial_thread.input_flash_driver(flash_driver_path)
+        else:
+            self.view.append_to_output_widget('无需下载 FlashDriver', self.view.LOG_TYPE_INFO)
+            self.one_key_config_running = False
+            self.view.enable_operation_buttons()
+
+    def get_key_did(self):
+        '''
+        获取 Key DID 按钮点击处理
+        '''
+        logger.info('点击获取 Key DID 按钮')
+        if self.serial_thread and self.serial_thread.isRunning():
+            self.view.append_to_output_widget(self.view.ui.getKeyDIDButton.text(), self.view.LOG_TYPE_INFO)
+            self.serial_thread.get_key_did()
+            self.view.disable_operation_buttons()
+        else:
+            self.view.append_to_output_widget('串口未打开', self.view.LOG_TYPE_ERROR)
+            logger.error('串口未打开')
+
+    def on_get_key_did_result(self, result, message):
+        '''
+        处理获取 Key DID 结果信号
+        :param result: Key DID 结果字典或字符串（错误信息）
+        :param message: 错误信息
+        '''
+        # 判断 result 是 dict 还是 str
+        if isinstance(result, str):
+            # 如果是字符串，直接显示到日志（这是解析失败返回的错误信息）
+            self.view.append_to_output_widget(f'获取 Key DID 结果: \n{result}', self.view.LOG_TYPE_DATA)
+        elif isinstance(result, dict):
+            # 如果是 dict，执行原有逻辑（填充 UI 控件）
+            if result:
+                self.view.append_to_output_widget(f'获取 Key DID 成功', self.view.LOG_TYPE_INFO)
+                self.view.append_to_output_widget(f'Key DID 信息: {result}', self.view.LOG_TYPE_DATA)
+
+                # DID 字段到控件的映射
+                did_to_control = {
+                    'get_uid_did': self.view.ui.getUIDDIDlineEdit,
+                    'huawei_read_did': self.view.ui.readHuaweiDIDlineEdit,
+                    'huawei_write_did': self.view.ui.writeHuaweiDIDlineEdit,
+                    'honor_read_did': self.view.ui.readHonorKeyDIDlineEdit,
+                    'honor_write_did': self.view.ui.writeHonorKeyDIDlineEdit,
+                    'xiaomi_read_did': self.view.ui.readXiaomiKeyDIDlineEdit,
+                    'xiaomi_write_did': self.view.ui.writeXiaomiKeyDIDlineEdit,
+                    'oppo_read_did': self.view.ui.readOppoKeyDIDlineEdit,
+                    'oppo_write_did': self.view.ui.writeOppoKeyDIDlineEdit,
+                    'vivo_read_did': self.view.ui.readVivoKeyDIDlineEdit,
+                    'vivo_write_did': self.view.ui.writeVivoKeyDIDlineEdit,
+                    'qi_read_did': self.view.ui.readQiDIDlineEdit,
+                    'qi_write_did': self.view.ui.writeQiDIDlineEdit,
+                    'lux_qi_read_did': self.view.ui.readLuxQiDIDlineEdit,
+                    'lux_qi_write_did': self.view.ui.writeLuxQiDIDlineEdit,
+                }
+
+                # 更新控件值
+                for did_key, control in did_to_control.items():
+                    value = result.get(did_key)
+                    if value is not None:
+                        # 格式化为 0xABCD 格式
+                        formatted_value = f'0x{value:04X}' if isinstance(value, int) else f'0x{value}'
+                        control.setText(formatted_value)
+            else:
+                self.view.append_to_output_widget(f'获取 Key DID 失败, {message}', self.view.LOG_TYPE_ERROR)
+        else:
+            # result 为 None 或其他情况
+            self.view.append_to_output_widget(f'获取 Key DID 失败, {message}', self.view.LOG_TYPE_ERROR)
+        
         self.view.enable_operation_buttons()
 
     def handle_received_data(self, log_message, type=View.LOG_RECEIVE, decode=View.ASCII):

@@ -13,6 +13,7 @@ from typing import Optional
 from PySide6.QtCore import QObject, Signal
 
 from utils.serial_handle import SerialOperator
+from utils.file_utils import read_toml_file, exe_absolute_path
 from utils.data_processor import SerialMessage, ValidValues, ConfigParams, MIN_DATA_LENGTH
 import utils.common_data_utils as utils
 from utils.common_data_utils import pack_uint16_le, pack_uint32_le, unpack_uint16_le
@@ -183,12 +184,12 @@ class SerialModel(QObject):
             self.receive_buffer.clear()
         return received_data
     
-    def send_request_with_retry(self, serial_message:SerialMessage, timeout=1) -> Optional[SerialMessage]:
+    def send_request_with_retry(self, serial_message:SerialMessage, timeout=1, max_retries=3) -> Optional[SerialMessage]:
         '''
         发送请求并处理重试逻辑
 
-        重试触发条件（满足任一则重发下一轮 for 循环，最多 3 轮）：
-            1. 通讯超时（1 秒内无任何响应）
+        重试触发条件（满足任一则重发下一轮 for 循环，最多 max_retries 轮）：
+            1. 通讯超时（timeout 秒内无任何响应）
             2. 收到响应但 data_type 不是 RESPONSE
             3. 收到响应但 command 与请求不匹配
 
@@ -196,12 +197,13 @@ class SerialModel(QObject):
               由调用方自行检查 status_code 决定后续处理。
 
         :param serial_message: 要发送的 SerialMessage 类型的请求数据
-        :return: 收到有效响应（肯定/否定均可）返回 SerialMessage，连续 3 次均未收到返回 None
+        :param timeout: 每次请求的超时时间（秒）
+        :param max_retries: 最大重试次数（包括首次），默认值为1（仅尝试1次）
+        :return: 收到有效响应（肯定/否定均可）返回 SerialMessage，连续 max_retries 次均未收到返回 None
         '''
         self.expect_response = True  # 设置响应期待标志
         self.active_request_command = serial_message.command
         try:
-            max_retries = 3
             # 使用 SerialMessage 生成要发送的数据
             if serial_message is not None:
                 for retry_count in range(max_retries):
@@ -218,6 +220,10 @@ class SerialModel(QObject):
                             'timestamp': start_time  # 时间戳
                         })
                     while (time.time() - start_time) < timeout:
+                        # 检查串口是否仍然打开，如果已断开则立即退出等待
+                        if not self.serial.is_open:
+                            logger.warning('串口已断开，退出等待')
+                            return None
                         response_data = self.receive_data()
                         logger.debug('第 %d 次请求收到应答数据：%s', retry_count + 1, response_data)
                         if response_data is not None:
@@ -275,7 +281,7 @@ class SerialModel(QObject):
         logger.info('开始通知传输FlashDriver')
         message = SerialMessage.generate_new_message(
             ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_SEND_FLASH_DRIVER, ValidValues.DATA_EMPTY)
-        response = self.send_request_with_retry(message, timeout=30)  # OTA命令需要更长时间
+        response = self.send_request_with_retry(message, timeout=30, max_retries=1)  # OTA命令需要更长时间，仅重试1次
         if response is None:
             error_msg = '通知下载FlashDriver超时未响应'
             logger.error(error_msg)
@@ -568,6 +574,68 @@ class SerialModel(QObject):
         
         logger.info('FlashDriver 下载成功')
         return True, None
+
+    def set_key_did(self, did_list):
+        """
+        设置密钥DID配置（命令00 08，操作类型0x01）
+        :param did_list: 15个DID值的列表。顺序为：
+            0-读UID (get_uid_did), 1-读华为 (huawei_read_did), 2-写华为 (huawei_write_did),
+            3-读荣耀 (honor_read_did), 4-写荣耀 (honor_write_did),
+            5-读小米 (xiaomi_read_did), 6-写小米 (xiaomi_write_did),
+            7-读oppo (oppo_read_did), 8-写oppo (oppo_write_did),
+            9-读vivo (vivo_read_did), 10-写vivo (vivo_write_did),
+            11-读qi (qi_read_did), 12-写qi (qi_write_did),
+            13-读立讯qi (luxqi_read_did), 14-写立讯qi (luxqi_write_did)
+        :return: (bool, str or None) - (成功标志, 错误信息)
+        """
+        logger.info('开始设置密钥DID配置')
+        # 构建数据体：1字节操作类型(0x01) + 30字节DID配置
+        data = bytearray([0x01])  # 操作类型：写配置
+        for did in did_list:
+            data.append(did & 0xFF)          # 低字节
+            data.append((did >> 8) & 0xFF)  # 高字节（小端序）
+        
+        message = SerialMessage.generate_new_message(
+            ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_WRITE_KEY_DID, bytes(data))
+        response = self.send_request_with_retry(message)
+        
+        if response is None:
+            error_msg = '设置密钥DID配置失败：无响应'
+            logger.error(error_msg)
+            return False, error_msg
+        
+        if response.data == ValidValues.CONFIG_SUCCESS_DATA:
+            logger.info('设置密钥DID配置成功')
+            return True, None
+        else:
+            error_msg = f'设置密钥DID配置失败：{response.data.hex() if response.data else "N/A"}'
+            logger.error(error_msg)
+            return False, error_msg
+
+    def get_key_did(self):
+        """
+        获取密钥DID配置（命令00 08，操作类型0x02）
+        :return: (str or None, str or None) - (DID配置字符串, 错误信息)
+        """
+        logger.info('开始读取密钥DID配置')
+        # 数据体只有1字节：操作类型0x02（读配置）
+        message = SerialMessage.generate_new_message(
+            ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_WRITE_KEY_DID, bytes([0x02]))
+        response_message = self.send_request_with_retry(message)
+        
+        if response_message is None:
+            error_msg = '读取密钥DID配置失败：无响应'
+            logger.error(error_msg)
+            return None, error_msg
+        
+        # 使用 SerialMessage 的统一解析方法
+        result, parse_result = response_message.to_key_did_status()
+        if result:
+            logger.info('读取密钥DID配置成功')
+            return result, None
+        else:
+            logger.error('解析密钥DID配置失败: %s', parse_result)
+            return None, parse_result
 
 if __name__ == "__main__":
     # 创建 SerialModel 实例

@@ -45,7 +45,8 @@ class ValidValues:
     COMMANDS_READ_UID           = b'\x00\x05'     # 命令 00 05：读UID
     COMMANDS_WRITE_QI_KEY       = b'\x00\x06'     # 命令 00 06：写Qi密钥
     COMMANDS_SEND_FLASH_DRIVER  = b'\x00\x07'     # 命令 00 07：通知传输FlashDriver
-    COMMANDS_RESET              = b'\x01\x01'     # 命令 01 01：复位
+    COMMANDS_WRITE_KEY_DID     = b'\x00\x08'     # 命令 00 08：写密钥DID配置
+    COMMANDS_RESET             = b'\x01\x01'     # 命令 01 01：复位
     # 导入 FlashDriver 命令
     COMMANDS_FLASH_START        = b'\x02\x01'     # 命令 02 01：FlashDriver 启动传输
     COMMANDS_FLASH_DATA         = b'\x02\x02'     # 命令 02 02：FlashDriver 数据传输
@@ -55,7 +56,8 @@ class ValidValues:
 
     RESET_SUCCESS_DATA = b'\x00\x00'     # 复位成功数据
     CONFIG_SUCCESS_DATA = b'\x00\x00'     # 参数配置成功数据
-    FAIL_DATA     = b'\xFF\xFF'     # 失败数据
+    SUCCESS_DATA        = b'\x00\x00'     # 成功数据
+    FAIL_DATA           = b'\xFF\xFF'     # 失败数据
     
     # TODO 导入FlashDriver指令失败的异常码未定义和解析
 
@@ -70,6 +72,7 @@ class ValidValues:
         COMMANDS_READ_UID,
         COMMANDS_WRITE_QI_KEY,
         COMMANDS_SEND_FLASH_DRIVER,
+        COMMANDS_WRITE_KEY_DID,
         COMMANDS_RESET,
         COMMANDS_FLASH_START,
         COMMANDS_FLASH_DATA,
@@ -342,6 +345,75 @@ class SerialMessage:
             key_status.append((download_status, enable_status))
 
         return key_status, self.NO_ERROR
+
+    def to_key_did_status(self):
+        '''
+        将数据体转换为密钥DID配置状态。
+        读操作返回格式化字符串，写操作返回成功标志。
+        :return: (str/bool, str) - (配置数据/成功标志, 错误信息)
+        '''
+        if self.data is None:
+            logger.error('Data is None')
+            return None, self.DATA_RESPONSE_NONE
+        
+        if self.data == ValidValues.FAIL_DATA:
+            logger.error('Data is FAIL_DATA，密钥DID配置失败 %s', utils.little_endian_array_to_hex_str(self.data))
+            return None, self.DATA_RESPONSE_FFFF
+        
+        # 读取操作返回31字节（1字节操作类型0x02 + 30字节DID配置）
+        # 写操作返回2字节（0x00 0x00表示成功）
+        if len(self.data) == 2 and self.data == ValidValues.SUCCESS_DATA:
+            # 写操作成功响应
+            return True, self.NO_ERROR
+        elif len(self.data) == 31 and self.data[0] == 0x02:
+            # 读取操作响应：数据体包含1字节操作类型(0x02) + 30字节DID配置
+            did_config = self._parse_did_config(bytes(self.data[1:31]))
+            return did_config, self.NO_ERROR
+        else:
+            logger.error('Data length or format error, got %d bytes', len(self.data))
+            return None, self.DATA_LENGTH_SHORT_ERROR
+    
+    def _parse_did_config(self, data):
+        '''
+        解析30字节DID配置数据
+        数据格式：15个DID，每个DID占2字节（大端序）
+        :return: 格式化字符串
+        '''
+        did_names_cn = [
+            '读UID DID',            # 0: 读UID DID
+            '读华为Key DID',         # 1: 读华为Key DID
+            '写华为Key DID',         # 2: 写华为Key DID
+            '读荣耀Key DID',         # 3: 读荣耀Key DID
+            '写荣耀Key DID',         # 4: 写荣耀Key DID
+            '读小米Key DID',         # 5: 读小米Key DID
+            '写小米Key DID',         # 6: 写小米Key DID
+            '读oppoKey DID',         # 7: 读oppoKey DID
+            '写oppoKey DID',         # 8: 写oppoKey DID
+            '读vivoKey DID',         # 9: 读vivoKey DID
+            '写vivoKey DID',         # 10: 写vivoKey DID
+            '读qi DID',              # 11: 读qi DID
+            '写qi DID',              # 12: 写qi DID
+            '读立讯qi DID',          # 13: 读立讯qi DID
+            '写立讯qi DID',          # 14: 写立讯qi DID
+        ]
+        
+        result_lines = []
+        for i, did_name in enumerate(did_names_cn):
+            offset = i * 2
+            if offset + 2 <= len(data):
+                did_value = (data[offset + 1] << 8) | data[offset]  # 小端序（低字节在前）
+            else:
+                did_value = 0
+            
+            # 格式化输出：值为0显示"未设置"，否则显示"0xXXXX"
+            if did_value == 0:
+                value_str = '未设置'
+            else:
+                value_str = f'0x{did_value:04X}'
+            
+            result_lines.append(f'{did_name}：{value_str}')
+        
+        return '\n'.join(result_lines)
     
     @staticmethod
     def _generate_serial_bytes(data_type, command, data):
@@ -427,6 +499,8 @@ class SerialMessage:
                 command_str = '写Qi密钥'
             case ValidValues.COMMANDS_SEND_FLASH_DRIVER:
                 command_str = '下载FlashDriver'
+            case ValidValues.COMMANDS_WRITE_KEY_DID:
+                command_str = '密钥DID配置'
             case ValidValues.COMMANDS_FLASH_START:
                 command_str = 'FlashDriver 导入开始'
             case ValidValues.COMMANDS_FLASH_DATA:

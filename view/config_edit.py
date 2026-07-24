@@ -7,9 +7,10 @@ from io import StringIO
 from datetime import datetime
 import toml
 
-from PySide6.QtWidgets import QMainWindow, QTableWidgetItem, QAbstractItemView, QStyledItemDelegate, QLineEdit, QHeaderView, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QTableWidgetItem, QAbstractItemView, QStyledItemDelegate, QLineEdit, QHeaderView, QFileDialog, QMessageBox, QStyle
 from PySide6.QtGui import QIcon, QRegularExpressionValidator, QShortcut, QKeySequence
 from PySide6.QtCore import Signal, Qt, QRegularExpression
+from PySide6.QtWidgets import QApplication
 
 from panel.config_edit_ui import Ui_configEditWindow
 from utils.file_utils import resource_path, read_toml_file, get_exe_dir
@@ -343,12 +344,121 @@ class ConfigEditWindow(QMainWindow):
             if index >= len(hex_array):
                 break
 
+    def _clear_qi_login(self):
+        """清除Qi账号信息，通过主窗口调用"""
+        from view.view import View
+        from PySide6.QtWidgets import QApplication
+
+        # 方案1：尝试从父窗口链查找（如果 ConfigEditWindow 曾设置过父窗口）
+        parent = self.parent()
+        while parent:
+            if isinstance(parent, View):
+                parent.clear_qi_login()
+                return
+            parent = parent.parent()
+
+        # 方案2：从应用顶级窗口查找
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, View):
+                widget.clear_qi_login()
+                return
+
+        # 方案3：通过 objectName 查找（更可靠的方式）
+        for widget in QApplication.topLevelWidgets():
+            if widget.objectName() == "View":
+                widget.clear_qi_login()
+                return
+
+        # 方案4：通过窗口标题查找（备选方案）
+        for widget in QApplication.topLevelWidgets():
+            window_title = widget.windowTitle()
+            if window_title and "SerialToCAN" in window_title:
+                if isinstance(widget, View):
+                    widget.clear_qi_login()
+                    return
+
+        logger.warning('未找到主窗口View，无法清除Qi账号')
+
+    def _clear_ui(self):
+        """清空界面所有控件，恢复到初始状态"""
+        # 清空内部数组
+        self.internal_array = ["00"] * 64
+        
+        # 清空 CAN 配置区域
+        self.ui.requestIDlineEdit.setText('')
+        self.ui.responseIDlineEdit.setText('')
+        
+        # 重置 CAN 类型到默认（CANFD），这会自动重置波特率
+        canfd_index = self.ui.typeComboBox.findText(ConfigEditWindow.DEFAULT_CAN_TYPE)
+        if canfd_index != -1:
+            self.ui.typeComboBox.setCurrentIndex(canfd_index)
+            self.update_baudrate_settings(canfd_index)
+        
+        # 清空诊断 DID 配置
+        self.ui.getKeyStatusDIDlineEdit.setText('')
+        self.ui.readWriteKeyDIDlineEdit.setText('')
+        
+        # 清空 Qi 证书配置
+        self.ui.qiTransmitIDlineEdit.setText('')
+        self.ui.qiReceiveIDlineEdit.setText('')
+        self.ui.getQiStatusDIDlineEdit.setText('')
+        
+        # 重置网络管理配置
+        self.ui.nmEnabledCheckBox.setChecked(False)
+        self.ui.NMDLCcomboBox.setCurrentIndex(0)
+        self.update_table_editable(0)  # 重置表格编辑状态
+        self.ui.NMIDlineEdit.setText('')
+        self.ui.NMPeriodLineEdit.setText('')
+        self.ui.NMPeriodLineEdit.setText('100')  # 恢复默认值
+        self.ui.readNMDataLineEdit.setText('')
+        
+        # 清空表格所有数据
+        for row in range(8):
+            for col in range(8):
+                item = self.ui.NMDataTableWidget.item(row, col)
+                if item and (item.flags() & Qt.ItemIsEditable):
+                    item.setText('')
+        
+        # 清空 FlashDriver 配置
+        self.ui.FlashDriverNameLineEdit.setText('')
+        
+        # 重置 cusdomKeyDIDcheckBox 为不勾选状态
+        if self.ui.cusdomKeyDIDcheckBox.isChecked():
+            self.ui.cusdomKeyDIDcheckBox.setChecked(False)
+            self._on_cusdom_key_did_checkbox_changed(False)
+        
+        # 清空 keyDIDWidget 的所有 lineEdit
+        self.ui.getUIDDIDlineEdit.setText('0x')
+        self.ui.readHuaweiDIDlineEdit.setText('0x')
+        self.ui.writeHuaweiDIDlineEdit.setText('0x')
+        self.ui.readXiaomiKeyDIDlineEdit.setText('0x')
+        self.ui.writeXiaomiKeyDIDlineEdit.setText('0x')
+        self.ui.readHonorKeyDIDlineEdit.setText('0x')
+        self.ui.writeHonorKeyDIDlineEdit.setText('0x')
+        self.ui.readQiDIDlineEdit.setText('0x')
+        self.ui.writeQiDIDlineEdit.setText('0x')
+        self.ui.readOppoKeyDIDlineEdit.setText('0x')
+        self.ui.writeOppoKeyDIDlineEdit.setText('0x')
+        self.ui.readLuxQiDIDlineEdit.setText('0x')
+        self.ui.writeLuxQiDIDlineEdit.setText('0x')
+        self.ui.readVivoKeyDIDlineEdit.setText('0x')
+        self.ui.writeVivoKeyDIDlineEdit.setText('0x')
+        
+        logger.debug("界面已清空")
+    
     def _connect_file_actions(self):
         """连接文件操作信号"""
         self.ui.importAction.triggered.connect(self.import_config)
         self.ui.saveAction.triggered.connect(self.save_config)
         self.ui.saveAsAction.triggered.connect(self.save_as_config)
         self.ui.OpenFlashDriverPathButton.clicked.connect(self.open_flash_driver_path)
+        
+        # 添加清除Qi账号菜单项
+        self.clearQiLoginAction = self.ui.menu.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton),
+            "清除Qi账号"
+        )
+        self.clearQiLoginAction.triggered.connect(self._clear_qi_login)
 
     def open_flash_driver_path(self):
         """打开 FlashDriver 目录"""
@@ -368,10 +478,19 @@ class ConfigEditWindow(QMainWindow):
 
     def load_config_file(self, file_path):
         """加载配置文件内容并填充 UI"""
+        # 检查路径是否为空
+        if not file_path:
+            error_msg = "配置文件路径为空"
+            logger.error(error_msg)
+            self._clear_ui()
+            self.fill_ui_and_show_result(None, error_msg)
+            return
+        
         # 检查文件是否存在
         if not os.path.exists(file_path):
             error_msg = f"配置文件 {file_path} 不存在"
             logger.error(error_msg)
+            self._clear_ui()
             self.fill_ui_and_show_result(None, error_msg)
             return
         
@@ -598,9 +717,42 @@ class ConfigEditWindow(QMainWindow):
             if not self.ui.cusdomKeyDIDcheckBox.isChecked():
                 self.ui.cusdomKeyDIDcheckBox.setChecked(True)
         # 如果不存在 custom_did 配置，也不报错，保持界面原样
-
+        
+        # ============================================
+        # 自动填充逻辑：当 write 行未填写时，自动从 read 行填充值
+        # ============================================
+        self._auto_fill_write_from_read()
+        
         logger.debug("填充配置到界面完成，日志信息: %s", fill_log)
         return fill_log
+
+    def _auto_fill_write_from_read(self):
+        """
+        自动填充逻辑：当 write 行的 lineEdit 为空时，自动从对应的 read 行填充值
+        配对关系：
+        1. readHuaweiDIDlineEdit → writeHuaweiDIDlineEdit
+        2. readHonorKeyDIDlineEdit → writeHonorKeyDIDlineEdit
+        3. readOppoKeyDIDlineEdit → writeOppoKeyDIDlineEdit
+        4. readVivoKeyDIDlineEdit → writeVivoKeyDIDlineEdit
+        5. readXiaomiKeyDIDlineEdit → writeXiaomiKeyDIDlineEdit
+        """
+        # 定义 read → write 的配对关系
+        read_write_pairs = [
+            # (self.ui.readHuaweiDIDlineEdit, self.ui.writeHuaweiDIDlineEdit),
+            # (self.ui.readHonorKeyDIDlineEdit, self.ui.writeHonorKeyDIDlineEdit),
+            (self.ui.readOppoKeyDIDlineEdit, self.ui.writeOppoKeyDIDlineEdit),
+            # (self.ui.readVivoKeyDIDlineEdit, self.ui.writeVivoKeyDIDlineEdit),
+            (self.ui.readXiaomiKeyDIDlineEdit, self.ui.writeXiaomiKeyDIDlineEdit),
+        ]
+        
+        # 遍历配对关系，如果 write 为空则从 read 填充
+        for read_edit, write_edit in read_write_pairs:
+            write_text = write_edit.text().strip()
+            if not write_text:
+                read_text = read_edit.text().strip()
+                if read_text:
+                    write_edit.setText(read_text)
+                    logger.debug(f"自动填充 write from read: {read_edit.objectName()} -> {write_edit.objectName()}, 值: {read_text}")
             
     def save_config(self):
         """保存配置到原文件"""
@@ -641,7 +793,8 @@ class ConfigEditWindow(QMainWindow):
             ValidValues.DIAG_DID_SECTION: "# 配置诊断 DID 相关参数",
             ValidValues.QI_CERTIFICATE_SECTION: "# 配置 Qi 证书相关参数",
             ValidValues.NM_CONFIG_SECTION: "# 配置网络管理相关参数",
-            ValidValues.FLASH_DRIVER_SECTION: "# 配置 FlashDriver 相关参数"
+            ValidValues.FLASH_DRIVER_SECTION: "# 配置 FlashDriver 相关参数",
+            ValidValues.CUSTOM_DID_SECTION: "# 配置密钥 DID 相关参数"
         }
         key_comments = {
             ValidValues.CAN_TYPE_KEY: "  # 通信类型 CAN/CANFD/LIN/Uart",

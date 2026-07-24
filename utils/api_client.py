@@ -80,8 +80,9 @@ class ApiClient:
                     logger.error('登录响应中未找到 token')
                     return False, '登录响应中未找到 token', None
             else:
-                logger.error(f'登录请求失败，状态码: {response.status_code}')
-                return False, f'请求失败，状态码: {response.status_code}', None
+                error_msg = resp_data.get("message", f"请求失败，状态码: {response.status_code}")
+                logger.error(f'登录请求失败: {error_msg}')
+                return False, error_msg, None
 
         except requests.exceptions.Timeout:
             logger.error('登录请求超时')

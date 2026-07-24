@@ -378,6 +378,7 @@ class View(QMainWindow):
             # 这里需要根据实际的 config_edit 类进行导入和实例化
             logger.info('编辑配置文件%s', config_file_path)
             self.config_edit_window = ConfigEditWindow(config_file_path)
+            # 注意：不要使用 setParent(self)，这会导致 ConfigEditWindow 成为主窗口的子窗口而出现布局问题
             self.config_edit_window.destroyed.connect(self.on_config_edit_closed)
         else:
             # 更新配置路径并重新加载配置
@@ -426,6 +427,9 @@ class View(QMainWindow):
         self.ui.getUIDButton.setEnabled(False)
         self.ui.writeLuxQiButton.setEnabled(False)
         self.ui.sendFlashDriverButton.setEnabled(False)
+        self.ui.setKeyDIDButton.setEnabled(False)
+        self.ui.getKeyDIDButton.setEnabled(False)
+        self.ui.resetKeyDIDButton.setEnabled(False)
 
     def enable_operation_buttons(self):
         """启用所有功能操作按钮"""
@@ -439,6 +443,9 @@ class View(QMainWindow):
         self.ui.getUIDButton.setEnabled(True)
         self.ui.writeLuxQiButton.setEnabled(True)
         self.ui.sendFlashDriverButton.setEnabled(True)
+        self.ui.setKeyDIDButton.setEnabled(True)
+        self.ui.getKeyDIDButton.setEnabled(True)
+        self.ui.resetKeyDIDButton.setEnabled(True)
 
     def handle_change_page(self):
         """处理页面切换按钮点击事件"""
@@ -712,6 +719,44 @@ class View(QMainWindow):
         else:
             # 恢复系统默认颜色
             status_bar.setStyleSheet('')
+
+    def clear_qi_login(self):
+        """清除Qi登录信息，下次写立讯Qi时会弹出登录对话框"""
+        config_file = exe_absolute_path('last_config.ini')
+        
+        # 读取现有配置
+        config_data = {}
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+                    if content:
+                        try:
+                            config_data = json.loads(content)
+                        except json.JSONDecodeError:
+                            # 旧版本格式
+                            pass
+            except Exception as e:
+                logger.error('读取配置文件失败: %s', e)
+        
+        # 移除Qi相关字段
+        if 'qi_api_token' in config_data:
+            del config_data['qi_api_token']
+        if 'qi_api_username' in config_data:
+            del config_data['qi_api_username']
+        
+        # 清除内存中的token
+        self.api_client.clear_auth()
+        
+        # 保存配置（保留其他配置项）
+        try:
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, ensure_ascii=False, indent=2)
+            logger.info('Qi账号信息已清除')
+        except Exception as e:
+            logger.error('保存配置文件失败: %s', e)
+        
+        self.append_to_output_widget('已清除Qi账号信息，下次写立讯Qi时会弹出登录对话框', self.LOG_TYPE_INFO)
 
     '''--------------------------------------保存的界面选项开始----------------------------------'''
     def load_last_config(self):

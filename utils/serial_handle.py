@@ -139,10 +139,17 @@ class SerialOperator:
         '''
         if self._ser and self._opened_port:
             port = self._opened_port
+            logger.info('尝试重新打开串口: %s', port)
             self.close_serial_port()
-            return self.open_serial_port(port)
+            result = self.open_serial_port(port)
+            if result:
+                logger.info('串口 %s 重新打开成功', port)
+            else:
+                logger.error('串口 %s 重新打开失败', port)
+            return result
         else:
             logger.debug('没有打开的串口')
+            return False
 
 # 假设要处理 2 个固定的串口
 # if __name__ == '__main__':
