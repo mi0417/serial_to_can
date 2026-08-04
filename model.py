@@ -278,7 +278,7 @@ class SerialModel(QObject):
         TODO
         :return: True成功，False失败
         '''
-        logger.info('开始通知传输FlashDriver')
+        logger.info('开始通知下载FlashDriver')
         message = SerialMessage.generate_new_message(
             ValidValues.DATA_TYPE_REQUEST, ValidValues.COMMANDS_SEND_FLASH_DRIVER, ValidValues.DATA_EMPTY)
         response = self.send_request_with_retry(message, timeout=30, max_retries=1)  # OTA命令需要更长时间，仅重试1次
@@ -287,10 +287,10 @@ class SerialModel(QObject):
             logger.error(error_msg)
             return False, error_msg
         if len(response.data) >= 2 and response.data[:2] == ValidValues.RESET_SUCCESS_DATA:
-            logger.info('下载FlashDriver成功')
+            logger.info('通知下载FlashDriver成功')
             return True, ""
         else:
-            logger.error('通知传输FlashDriver失败：状态码错误 %s', response.data[:2].hex() if len(response.data) >= 2 else 'N/A')
+            logger.error('通知下载FlashDriver失败：状态码错误 %s', response.data[:2].hex() if len(response.data) >= 2 else 'N/A')
             return False, f'收到负响应{response.data[:2].hex()}'
 
     def write_qi_key(self, key_hex: str):
@@ -428,7 +428,7 @@ class SerialModel(QObject):
         :return: (True, None) 成功，(False, error_message) 失败
         '''
         # 读取 FlashDriver 文件
-        logger.info('开始下载 FlashDriver: %s', file_path)
+        logger.info('开始导入 FlashDriver: %s', file_path)
         flash_driver_data = read_flash_driver_file(file_path)
         if flash_driver_data is None:
             logger.error('读取 FlashDriver 文件失败')
@@ -572,7 +572,7 @@ class SerialModel(QObject):
             logger.error('总校验失败: %s', error_msg)
             return False, error_msg
         
-        logger.info('FlashDriver 下载成功')
+        logger.info('FlashDriver 导入成功')
         return True, None
 
     def set_key_did(self, did_list):

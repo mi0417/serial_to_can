@@ -506,6 +506,8 @@ class ConfigEditWindow(QMainWindow):
             logger.error(error_msg)
 
         self.config_file_path = file_path
+        # 加载配置文件前先清空界面，确保旧配置的数据被清除
+        self._clear_ui()
         self.fill_ui_and_show_result(config, error_msg)
 
     def fill_ui_and_show_result(self, config, error_msg=None):
@@ -925,11 +927,15 @@ class ConfigEditWindow(QMainWindow):
                 ValidValues.NM_ID_KEY: handle_hex_input(self.ui.NMIDlineEdit.text()),
                 ValidValues.NM_PERIOD_KEY: nm_period,
                 ValidValues.NM_MESSAGE_KEY: self._get_nm_message_from_table()
-            },
-            ValidValues.FLASH_DRIVER_SECTION: {
-                ValidValues.FLASH_DRIVER_NAME_KEY: self.ui.FlashDriverNameLineEdit.text()
             }
         }
+        
+        # 只有 FlashDriver_name 不为空时才添加 FlashDriver 配置组
+        flash_driver_name = self.ui.FlashDriverNameLineEdit.text().strip()
+        if flash_driver_name:
+            config[ValidValues.FLASH_DRIVER_SECTION] = {
+                ValidValues.FLASH_DRIVER_NAME_KEY: flash_driver_name
+            }
         
         # 如果勾选了 cusdomKeyDIDcheckBox，保存 custom_did 配置
         if self.ui.cusdomKeyDIDcheckBox.isChecked():

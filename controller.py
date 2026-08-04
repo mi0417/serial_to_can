@@ -689,12 +689,12 @@ class Controller(QObject):
                 # 无需配置 DID，直接检查是否需要下载 FlashDriver
                 flash_driver_path = get_file_path_from_config(self.view.config_path)
                 if flash_driver_path:
-                    self.view.append_to_output_widget('开始下载 FlashDriver...', self.view.LOG_TYPE_INFO)
+                    self.view.append_to_output_widget('开始导入 FlashDriver...', self.view.LOG_TYPE_INFO)
                     self.serial_thread.input_flash_driver(flash_driver_path)
                     # FlashDriver 由 handle_input_flash_driver_result 恢复按钮
                     return
                 else:
-                    self.view.append_to_output_widget('无需下载 FlashDriver', self.view.LOG_TYPE_INFO)
+                    self.view.append_to_output_widget('无需导入 FlashDriver', self.view.LOG_TYPE_INFO)
 
             self.one_key_config_running = False
             self.view.enable_operation_buttons()
@@ -705,7 +705,7 @@ class Controller(QObject):
 
     def one_key_config(self):
         '''
-        一键配置：配置设备 → 读取配置 → 下载 FlashDriver（可选）→ 结束
+        一键配置：配置设备 → 读取配置 → 导入 FlashDriver（可选）→ 结束
         '''
         logger.info('点击一键配置按钮')
         check_config_file_result = self.check_config_file()
@@ -735,7 +735,7 @@ class Controller(QObject):
 
     def input_flash_driver(self):
         '''
-        下载 FlashDriver 到黑盒子
+        导入 FlashDriver 到黑盒子
         '''
         logger.info('点击导入 FlashDriver 按钮')
         if self.serial_thread and self.serial_thread.isRunning():
@@ -757,14 +757,14 @@ class Controller(QObject):
 
     def handle_input_flash_driver_result(self, success, error_msg):
         '''
-        处理 FlashDriver 下载结果信号
-        :param success: 下载是否成功
+        处理 FlashDriver 导入结果信号
+        :param success: 导入是否成功
         :param error_msg: 错误信息
         '''
         if success:
-            self.view.append_to_output_widget('FlashDriver 下载成功', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget('FlashDriver 导入成功', self.view.LOG_TYPE_INFO)
         else:
-            self.view.append_to_output_widget(f'FlashDriver 下载失败: {error_msg}', self.view.LOG_TYPE_ERROR)
+            self.view.append_to_output_widget(f'FlashDriver 导入失败: {error_msg}', self.view.LOG_TYPE_ERROR)
 
         self.one_key_config_running = False
         self.view.enable_operation_buttons()
@@ -1040,10 +1040,10 @@ class Controller(QObject):
         # 继续下载 FlashDriver
         flash_driver_path = get_file_path_from_config(self.view.config_path)
         if flash_driver_path:
-            self.view.append_to_output_widget('开始下载 FlashDriver...', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget('开始导入 FlashDriver...', self.view.LOG_TYPE_INFO)
             self.serial_thread.input_flash_driver(flash_driver_path)
         else:
-            self.view.append_to_output_widget('无需下载 FlashDriver', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget('无需导入 FlashDriver', self.view.LOG_TYPE_INFO)
             self.one_key_config_running = False
             self.view.enable_operation_buttons()
 
