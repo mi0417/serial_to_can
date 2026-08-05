@@ -689,7 +689,7 @@ class Controller(QObject):
                 # 无需配置 DID，直接检查是否需要下载 FlashDriver
                 flash_driver_path = get_file_path_from_config(self.view.config_path)
                 if flash_driver_path:
-                    self.view.append_to_output_widget('开始导入 FlashDriver...', self.view.LOG_TYPE_INFO)
+                    self.view.append_to_output_widget(f'开始导入 FlashDriver: {flash_driver_path}', self.view.LOG_TYPE_INFO)
                     self.serial_thread.input_flash_driver(flash_driver_path)
                     # FlashDriver 由 handle_input_flash_driver_result 恢复按钮
                     return
@@ -1037,10 +1037,10 @@ class Controller(QObject):
             self.view.enable_operation_buttons()
             return
 
-        # 继续下载 FlashDriver
+        # 继续导入 FlashDriver
         flash_driver_path = get_file_path_from_config(self.view.config_path)
         if flash_driver_path:
-            self.view.append_to_output_widget('开始导入 FlashDriver...', self.view.LOG_TYPE_INFO)
+            self.view.append_to_output_widget(f'开始导入 FlashDriver: {flash_driver_path}', self.view.LOG_TYPE_INFO)
             self.serial_thread.input_flash_driver(flash_driver_path)
         else:
             self.view.append_to_output_widget('无需导入 FlashDriver', self.view.LOG_TYPE_INFO)
